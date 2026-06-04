@@ -3,349 +3,757 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VVIP Bandobast Auto-Deployment & Rationing Engine</title>
+    <title>VVIP Bandobast Operational Command Center</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --gov-navy: #0b1c3c;
-            --gov-navy-light: #172e59;
-            --gov-gold: #cca052;
-            --bg: #f4f6f9;
-            --surface: #ffffff;
-            --border: #d1d5db;
-            --border-heavy: #9ca3af;
-            --success-green: #10b981;
-            --warning-yellow: #f59e0b;
-            --danger-red: #ef4444;
+            /* Dark Mode colors (Default) */
+            --bg-primary: #090d16;
+            --bg-secondary: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.45);
+            --bg-sidebar: #05080f;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --backdrop-filter: blur(12px);
+
+            /* Light Mode colors */
+            --bg-primary-light: #f1f5f9;
+            --bg-secondary-light: #f8fafc;
+            --bg-card-light: rgba(255, 255, 255, 0.8);
+            --bg-sidebar-light: #0f172a;
+            --border-color-light: rgba(0, 0, 0, 0.08);
+            --text-color-light: #0f172a;
+            --text-muted-light: #64748b;
+            --shadow-light: 0 4px 18px rgba(0, 0, 0, 0.05);
+
+            /* Theme Colors */
+            --primary: #3B82F6;
+            --accent-cyan: #06B6D4;
+            --accent-purple: #8B5CF6;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
         }
 
-        body { 
-            background-color: var(--bg); 
-            font-family: 'Inter', sans-serif; 
-            color: #111827;
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow: hidden;
+            height: 100vh;
         }
 
-        .header-wrapper {
-            background: var(--gov-navy);
-            border-bottom: 4px solid var(--gov-gold);
-            color: white;
-            padding: 16px 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        body.light-theme {
+            background-color: var(--bg-primary-light);
+            color: var(--text-color-light);
         }
 
-        .header-title {
-            font-family: 'Merriweather', serif;
-            font-weight: 700;
+        /* Glassmorphism Card Style */
+        .card-custom {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color) !important;
+            backdrop-filter: var(--backdrop-filter);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            margin-bottom: 20px;
         }
 
-        .card-custom { 
-            border-radius: 6px; 
-            border: 1px solid var(--border); 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            margin-bottom: 20px; 
-            background: var(--surface);
+        body.light-theme .card-custom {
+            background: var(--bg-card-light);
+            border: 1px solid var(--border-color-light) !important;
+            box-shadow: var(--shadow-light);
+            color: var(--text-color-light);
+        }
+
+        .card-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px 0 rgba(59, 130, 246, 0.1);
         }
 
         .card-title-custom {
             font-family: 'Merriweather', serif;
             font-weight: 700;
-            color: var(--gov-navy);
-            border-bottom: 2px solid var(--gov-gold);
-            padding-bottom: 6px;
-            margin-bottom: 15px;
-        }
-
-        .sector-header { 
-            background-color: var(--gov-navy); 
-            color: white; 
-            font-weight: bold; 
-            padding: 12px; 
-            border-radius: 6px 6px 0 0; 
-            margin-top: 25px; 
-        }
-
-        .point-block { 
-            background: white; 
-            border: 1px solid var(--border); 
-            padding: 15px; 
-            border-top: none; 
-            margin-bottom: 15px; 
-            border-radius: 0 0 6px 6px;
-        }
-
-        .locked-officer { 
-            background-color: #e2f0d9; 
-            border-left: 5px solid #385723; 
-            color: #385723; 
-            font-weight: 500; 
-        }
-
-        .auto-filled-officer { 
-            background-color: #fff2cc; 
-            border-left: 5px solid #d4a373; 
-            color: #7f6000; 
-            font-weight: 500; 
-        }
-
-        .vacant-slot { 
-            background-color: #fce4d6; 
-            border-left: 5px solid #c65911; 
-            color: #c65911; 
-            font-weight: 500;
-        }
-
-        .table-sm th, .table-sm td { 
-            padding: 8px 12px; 
-            vertical-align: middle; 
-        }
-
-        .live-counter-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
             font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
         }
 
-        /* Hover and transition effects */
-        .btn {
-            transition: all 0.2s ease-in-out;
-            font-weight: 600;
-            border-radius: 4px;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
+        /* App Layout structure */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
         }
 
-        /* Modal custom scrollbar */
-        .modal-body-scroll {
-            max-height: 400px;
+        /* Sidebar design */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-shrink: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.light-theme .sidebar {
+            background-color: var(--bg-sidebar-light);
+            border-right: 1px solid var(--border-color-light);
+        }
+
+        .nav-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item-custom:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-item-custom.active {
+            color: white;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+
+        /* Main area */
+        .main-layout {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .app-header {
+            height: 70px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            background: rgba(9, 13, 22, 0.3);
+            backdrop-filter: blur(10px);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.light-theme .app-header {
+            background: rgba(241, 245, 249, 0.5);
+            border-bottom: 1px solid var(--border-color-light);
+        }
+
+        .workspace-area {
+            flex-grow: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .content-scroll {
+            flex-grow: 1;
             overflow-y: auto;
+            padding: 30px;
+        }
+
+        /* Right panel activity layout */
+        .right-utility-panel {
+            width: 320px;
+            background-color: var(--bg-sidebar);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+            padding: 24px;
+            transition: width 0.3s ease, padding 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.light-theme .right-utility-panel {
+            background-color: var(--bg-secondary-light);
+            border-left: 1px solid var(--border-color-light);
+        }
+
+        .right-utility-panel.collapsed {
+            width: 0;
+            padding: 0;
+            border-left: none;
+        }
+
+        /* Drag & Drop Upload Zone */
+        .drag-drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        body.light-theme .drag-drop-zone {
+            border: 2px dashed rgba(0, 0, 0, 0.15);
+        }
+
+        .drag-drop-zone:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.03);
+        }
+
+        /* Custom Status badge style */
+        .locked-officer {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+            border-left: 4px solid var(--success) !important;
+            color: var(--success) !important;
+        }
+        .auto-filled-officer {
+            background-color: rgba(245, 158, 11, 0.08) !important;
+            border-left: 4px solid var(--warning) !important;
+            color: var(--warning) !important;
+        }
+        .vacant-slot {
+            background-color: rgba(239, 68, 68, 0.08) !important;
+            border-left: 4px solid var(--danger) !important;
+            color: var(--danger) !important;
+        }
+
+        /* Accordion custom styling */
+        .accordion-button-custom {
+            background: rgba(30, 41, 59, 0.2) !important;
+            color: var(--text-color) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 6px !important;
+        }
+
+        body.light-theme .accordion-button-custom {
+            background: var(--bg-card-light) !important;
+            color: var(--text-color-light) !important;
+            border: 1px solid var(--border-color-light) !important;
+        }
+
+        /* Side Personnel Profile Drawer */
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            box-shadow: -15px 0 40px rgba(0,0,0,0.5);
+            z-index: 1050;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-color);
+        }
+
+        body.light-theme .side-drawer {
+            background: var(--bg-secondary-light);
+            border-left: 1px solid var(--border-color-light);
+            box-shadow: -15px 0 40px rgba(0,0,0,0.08);
+            color: var(--text-color-light);
+        }
+
+        .side-drawer.open {
+            right: 0;
+        }
+
+        /* Accessibility Focus ring */
+        .btn:focus, .form-control:focus, .form-check-input:focus {
+            box-shadow: 0 0 0 3px var(--primary) !important;
+            outline: none;
+        }
+
+        /* General utility */
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .text-theme {
+            color: var(--text-color);
+        }
+
+        body.light-theme .text-theme {
+            color: var(--text-color-light);
+        }
+
+        .text-theme-muted {
+            color: var(--text-muted);
+        }
+
+        body.light-theme .text-theme-muted {
+            color: var(--text-muted-light);
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Section -->
-    <header class="header-wrapper">
-        <div class="container-fluid d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem of India" style="width: 32px; height: auto; filter: brightness(0) invert(1);">
-                <div>
-                    <h2 class="header-title mb-0" style="font-size: 1.4rem;">🛡️ VVIP BANDOBAST AUTO-DEPLOYMENT & RATIONING SYSTEM</h2>
-                    <small style="color: #cbd5e1; letter-spacing: 0.5px;">POLICE DEPARTMENT ADMINISTRATIVE WORKSPACE</small>
-                </div>
-            </div>
+    <div class="app-container">
+        
+        <!-- Left Navigation Rail -->
+        <aside class="sidebar">
             <div>
-                <span class="badge bg-danger p-2">PRO REGIME ACTIVE</span>
+                <!-- Branding Header -->
+                <div class="p-4 d-flex align-items-center gap-3 border-bottom border-secondary border-opacity-10">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" style="width: 28px; filter: brightness(0) invert(1);" alt="Emblem">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-white font-family-serif" style="letter-spacing: 0.5px;">VVIP BANDOBAST</h6>
+                        <span class="badge bg-primary py-0.5 px-1.5 font-mono" style="font-size: 0.6rem;">OP COMMAND v2.1</span>
+                    </div>
+                </div>
+                
+                <!-- Nav Links -->
+                <nav class="sidebar-nav mt-3">
+                    <a href="#" class="nav-item-custom active" onclick="switchView('dashboard', this)">
+                        <i class="bi bi-grid-1x2-fill"></i> Command Dashboard
+                    </a>
+                    <a href="#" class="nav-item-custom" onclick="switchView('rules', this)">
+                        <i class="bi bi-sliders"></i> Filter Rules & Top-Up
+                    </a>
+                    <a href="#" class="nav-item-custom" onclick="switchView('pool', this)">
+                        <i class="bi bi-people-fill"></i> Personnel Pool
+                    </a>
+                    <a href="#" class="nav-item-custom" onclick="switchView('reports', this)">
+                        <i class="bi bi-cloud-arrow-down-fill"></i> Logs & Reports
+                    </a>
+                </nav>
             </div>
-        </div>
-    </header>
-
-    <div class="container-fluid mt-4 px-4">
-        <div class="row">
             
-            <!-- Left Side Inputs & Controls -->
-            <div class="col-lg-4 col-md-5">
+            <!-- Sidebar Bottom Panel -->
+            <div class="p-3 border-top border-secondary border-opacity-10">
+                <button class="btn btn-outline-light w-100 btn-sm d-flex align-items-center justify-content-center gap-2 mb-3" onclick="toggleTheme()">
+                    <i class="bi bi-sun-fill" id="themeIcon"></i>
+                    <span id="themeText">Toggle Theme</span>
+                </button>
+                <div class="text-center font-mono text-muted" style="font-size: 0.65rem;">SECURE ENCRYPTED CHANNEL</div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <div class="main-layout">
+            
+            <!-- App Header -->
+            <header class="app-header">
+                <div class="d-flex align-items-center gap-3">
+                    <h5 class="fw-bold mb-0 text-theme">POLICE COMMAND CENTRE PORTAL</h5>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-sm btn-dark border border-secondary border-opacity-20 text-white" onclick="toggleRightPanel()">
+                        <i class="bi bi-layout-sidebar-reverse"></i> Logs Panel
+                    </button>
+                    <span class="badge bg-danger p-2 font-mono">ENCRYPTED ACTIVE</span>
+                </div>
+            </header>
+
+            <!-- Workspace Tabs Content -->
+            <div class="workspace-area">
                 
-                <!-- Box A & B Upload -->
-                <div class="card card-custom p-4">
-                    <h5 class="card-title-custom">📥 CORE DATA INPUTS</h5>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Box A: Upload BB Scheme (CSV)</label>
-                        <input type="file" id="schemeFile" class="form-control" accept=".csv">
-                        <small class="text-muted">Upload sector requirements with rank counts.</small>
+                <!-- Center Scroll Area -->
+                <main class="content-scroll">
+                    
+                    <!-- KPI Counter Cards Section -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-2 col-6">
+                            <div class="card-custom p-3 d-flex flex-column justify-content-between h-100">
+                                <span class="text-theme-muted small fw-bold">REQUIRED FORCE</span>
+                                <div class="d-flex align-items-baseline gap-2 mt-2">
+                                    <h2 id="txtReq" class="text-warning fw-bold mb-0">0</h2>
+                                    <small class="text-theme-muted">slots</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="card-custom p-3 d-flex flex-column justify-content-between h-100">
+                                <span class="text-theme-muted small fw-bold">AVAILABLE POOL</span>
+                                <div class="d-flex align-items-baseline gap-2 mt-2">
+                                    <h2 id="txtAvail" class="text-success fw-bold mb-0">0</h2>
+                                    <small class="text-theme-muted">staff</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="card-custom p-3 d-flex flex-column justify-content-between h-100">
+                                <span class="text-theme-muted small fw-bold">COVERAGE RATIO</span>
+                                <div class="d-flex align-items-baseline gap-2 mt-2">
+                                    <h2 id="txtRatio" class="text-danger fw-bold mb-0">100%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="card-custom p-3 d-flex flex-column justify-content-between h-100">
+                                <span class="text-theme-muted small fw-bold">VACANT SECTORS</span>
+                                <div class="d-flex align-items-baseline gap-2 mt-2">
+                                    <h2 id="txtVacancies" class="text-danger fw-bold mb-0">0</h2>
+                                    <small class="text-theme-muted">points</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="card-custom p-3 d-flex flex-column justify-content-between h-100">
+                                <span class="text-theme-muted small fw-bold">FILLED POSITIONS</span>
+                                <div class="d-flex align-items-baseline gap-2 mt-2">
+                                    <h2 id="txtFilled" class="text-success fw-bold mb-0">0</h2>
+                                    <small class="text-theme-muted">active</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="card-custom p-3 d-flex flex-column justify-content-between h-100">
+                                <span class="text-theme-muted small fw-bold">ACTIVE SECTORS</span>
+                                <div class="d-flex align-items-baseline gap-2 mt-2">
+                                    <h2 id="txtActiveSectors" class="text-primary fw-bold mb-0">0</h2>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Box B: Upload Nominal Roll (CSV)</label>
-                        <input type="file" id="nominalFile" class="form-control" accept=".csv">
-                        <small class="text-muted">Upload the master roster of available officers.</small>
-                    </div>
-                    <button class="btn btn-primary w-100 py-2 mt-2 fw-bold" onclick="processPoliceFiles()">🔄 ANALYZE & GENERATE ALL SECTORS</button>
-                </div>
 
-                <!-- Dynamic Pre-deployment Sector Mapping Card -->
-                <div class="card card-custom p-4 border-info d-none" id="mappingCard">
-                    <h5 class="card-title-custom text-info">🗺️ PRE-DEPLOYMENT DUTY MAPPING</h5>
-                    <p class="text-muted small">We found unmatched duties in the Nominal Roll. Map them to the BB Scheme sectors below to align pre-deployed staff:</p>
-                    <div id="mappingFieldsContainer" class="mb-3">
-                        <!-- Dynamically filled mapping dropdowns -->
-                    </div>
-                    <button class="btn btn-info text-white w-100 fw-bold" onclick="applyPreDeploymentMapping()">🔗 Apply Map & Re-Process</button>
-                </div>
+                    <!-- View A: Command Dashboard Tab -->
+                    <div id="view-dashboard" class="tab-view">
+                        
+                        <!-- Live Force Availability Counters -->
+                        <div class="card-custom p-4 mb-4">
+                            <h5 class="card-title-custom text-theme mb-3"><i class="bi bi-people-fill me-2"></i>LIVE FORCE AVAILABILITY (UNUSED / TOTAL POOL)</h5>
+                            <div class="row g-2 text-center font-mono">
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">DSP</span>
+                                        <span id="pool-DSP" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">CI</span>
+                                        <span id="pool-CI" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">SI</span>
+                                        <span id="pool-SI" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">ASI/HC</span>
+                                        <span id="pool-ASI" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">HC</span>
+                                        <span id="pool-HC" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">PC</span>
+                                        <span id="pool-PC" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">WPC</span>
+                                        <span id="pool-WPC" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="bg-dark bg-opacity-40 p-2 rounded border border-secondary border-opacity-10 text-white">
+                                        <span class="text-theme-muted d-block small" style="font-size: 0.75rem;">HG</span>
+                                        <span id="pool-HG" class="badge bg-primary fs-6 mt-1">0 / 0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Custom Rule Filters -->
-                <div class="card card-custom p-4">
-                    <h5 class="card-title-custom">⚙️ CUSTOM ALGORITHMIC FILTERS</h5>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="ageRule" checked>
-                        <label class="form-check-label fw-semibold" for="ageRule">Age > 55 Exclusion Rule</label>
-                        <small class="d-block text-muted">Do not deploy older personnel to demanding route/checkpost duty points.</small>
-                    </div>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="wpcRule" checked>
-                        <label class="form-check-label fw-semibold" for="wpcRule">VIP Points WPC Priority</label>
-                        <small class="d-block text-muted">Restrict/Prioritize female personnel (WPC) for VIP enclosures & Shamiana duties.</small>
-                    </div>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="psPairingRule">
-                        <label class="form-check-label fw-semibold" for="psPairingRule">Same Station (PS) Pairing</label>
-                        <small class="d-block text-muted">Attempt to deploy Constables/HCs from the same Police Station in pairs.</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Manual Directive Notes (Optional)</label>
-                        <textarea class="form-control" id="manualDirectiveText" rows="2" placeholder="e.g. Restrict Home Guards to traffic support only..."></textarea>
-                    </div>
-                </div>
+                        <div class="row">
+                            <!-- Files upload segment -->
+                            <div class="col-md-6">
+                                <div class="card-custom p-4">
+                                    <h5 class="card-title-custom text-theme"><i class="bi bi-cloud-arrow-up-fill me-2"></i>BB SCHEME FILE (BOX A)</h5>
+                                    <div class="drag-drop-zone p-4 text-center mb-3" ondragover="event.preventDefault()" ondrop="handleFileDrop(event, 'schemeFile')">
+                                        <input type="file" id="schemeFile" class="d-none" onchange="handleFileSelect('schemeFile', this)">
+                                        <div class="upload-icon mb-2 fs-2 text-primary"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                                        <span class="fw-bold d-block text-theme">Drag & Drop Scheme CSV</span>
+                                        <span class="text-theme-muted small">or click to browse local files</span>
+                                        <div class="file-preview-name mt-2 text-info small font-mono d-none"></div>
+                                    </div>
+                                </div>
+                            </div>
 
-                <!-- Force Top-up -->
-                <div class="card card-custom p-4 border-warning">
-                    <h5 class="card-title-custom text-warning">⚡ ADDITIONAL FORCE TOP-UP</h5>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Upload Additional Force (CSV)</label>
-                        <input type="file" id="additionalFile" class="form-control" accept=".csv">
-                        <small class="text-muted">Top up remaining vacancies without affecting locked/filled spots.</small>
+                            <div class="col-md-6">
+                                <div class="card-custom p-4">
+                                    <h5 class="card-title-custom text-theme"><i class="bi bi-cloud-arrow-up-fill me-2"></i>NOMINAL ROLL MASTER (BOX B)</h5>
+                                    <div class="drag-drop-zone p-4 text-center mb-3" ondragover="event.preventDefault()" ondrop="handleFileDrop(event, 'nominalFile')">
+                                        <input type="file" id="nominalFile" class="d-none" onchange="handleFileSelect('nominalFile', this)">
+                                        <div class="upload-icon mb-2 fs-2 text-success"><i class="bi bi-file-earmark-person-fill"></i></div>
+                                        <span class="fw-bold d-block text-theme">Drag & Drop Nominal Roll CSV</span>
+                                        <span class="text-theme-muted small">or click to browse local files</span>
+                                        <div class="file-preview-name mt-2 text-success small font-mono d-none"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Processing trigger -->
+                        <div class="mb-4">
+                            <button class="btn btn-primary w-100 py-3 mt-2 fw-bold text-uppercase" onclick="processPoliceFiles()">
+                                <i class="bi bi-play-circle-fill me-2"></i> Analyze Data & Build Operational Workspace
+                            </button>
+                        </div>
+
+                        <!-- Rationing strategies Alert banner -->
+                        <div id="rationingAlert" class="alert alert-info py-3 mb-4 text-dark d-none border-0 shadow"></div>
+
+                        <!-- Dynamic mapping panel -->
+                        <div class="card-custom p-4 border-info d-none mb-4" id="mappingCard">
+                            <h5 class="card-title-custom text-info"><i class="bi bi-signpost-split-fill me-2"></i>PRE-DEPLOYMENT SECTOR MAPPING</h5>
+                            <p class="text-theme-muted small">Unmatched custom duties detected. Map them below to lock deployment slots:</p>
+                            <div id="mappingFieldsContainer" class="row g-2 mb-3"></div>
+                            <button class="btn btn-info text-white w-100 fw-bold" onclick="applyPreDeploymentMapping()">
+                                <i class="bi bi-link-45deg me-1"></i> APPLY MAPS & RE-BUILD ROSTER
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Workspace Accordions -->
+                        <div class="card-custom p-4">
+                            <h5 class="card-title-custom text-theme mb-3"><i class="bi bi-layers-half me-2"></i>OPERATIONAL BANDOBAST WORKSPACE</h5>
+                            
+                            <div id="initialNotice" class="text-center py-5 text-theme-muted border border-dashed rounded bg-dark bg-opacity-20">
+                                <h5>⚠️ Deployment Workspace Empty</h5>
+                                <p class="mb-0">Please upload Box A & Box B CSV files to generate active sectors.</p>
+                            </div>
+                            
+                            <div class="accordion d-flex flex-column gap-2" id="workspaceContainer"></div>
+                        </div>
                     </div>
-                    <button class="btn btn-warning w-100 fw-bold" onclick="executeTopUp()">⚡ Top-Up Vacancies Only</button>
-                </div>
+
+                    <!-- View B: Filters, Custom directives and Additional Topups -->
+                    <div id="view-rules" class="tab-view d-none">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card-custom p-4">
+                                    <h5 class="card-title-custom text-theme"><i class="bi bi-shield-lock-fill me-2"></i>CUSTOM FILTERS</h5>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="ageRule" checked>
+                                        <label class="form-check-label fw-bold text-theme" for="ageRule">Age > 55 Exclusion Rule</label>
+                                        <small class="d-block text-theme-muted">Excludes older officers from demanding route patrols / checkposts.</small>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="wpcRule" checked>
+                                        <label class="form-check-label fw-bold text-theme" for="wpcRule">VIP Points WPC Priority</label>
+                                        <small class="d-block text-theme-muted">Prioritizes female staff for VIP sectors / enclosures / stages.</small>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="psPairingRule">
+                                        <label class="form-check-label fw-bold text-theme" for="psPairingRule">Same Station (PS) Pairing</label>
+                                        <small class="d-block text-theme-muted">Pairs personnel from the same station together for support.</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-theme">Manual Directive Notes</label>
+                                        <textarea class="form-control bg-dark border-secondary text-white" id="manualDirectiveText" rows="3" placeholder="Notes..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card-custom p-4 border-warning">
+                                    <h5 class="card-title-custom text-warning"><i class="bi bi-plus-circle-fill me-2"></i>ADDITIONAL FORCE TOP-UP</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-theme">Upload Additional Nominal Roll (CSV)</label>
+                                        <div class="drag-drop-zone p-4 text-center mb-3" ondragover="event.preventDefault()" ondrop="handleFileDrop(event, 'additionalFile')">
+                                            <input type="file" id="additionalFile" class="d-none" onchange="handleFileSelect('additionalFile', this)">
+                                            <div class="upload-icon mb-2 fs-2 text-warning"><i class="bi bi-file-earmark-plus-fill"></i></div>
+                                            <span class="fw-bold d-block text-theme">Drag & Drop Additional CSV</span>
+                                            <div class="file-preview-name mt-2 text-warning small font-mono d-none"></div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-warning w-100 fw-bold" onclick="executeTopUp()">
+                                        <i class="bi bi-lightning-fill me-1"></i> TOP-UP VACANCIES ONLY
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View C: Personnel Pool Tab -->
+                    <div id="view-pool" class="tab-view d-none">
+                        <div class="card-custom p-4">
+                            <h5 class="card-title-custom text-theme mb-3"><i class="bi bi-people-fill me-2"></i>ACTIVE ROSTER POOL</h5>
+                            
+                            <!-- Search & Rank Filter inside pool view -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <input type="text" id="poolSearchInput" class="form-control bg-dark border-secondary text-white" placeholder="Search by name, PS..." onkeyup="filterPoolGrid()">
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="poolRankSelect" class="form-select bg-dark border-secondary text-white" onchange="filterPoolGrid()">
+                                        <option value="">All Ranks</option>
+                                        <option value="DSP">DSP</option>
+                                        <option value="CI">CI</option>
+                                        <option value="SI">SI</option>
+                                        <option value="ASI/HC">ASI/HC</option>
+                                        <option value="HC">HC</option>
+                                        <option value="PC">PC</option>
+                                        <option value="WPC">WPC</option>
+                                        <option value="HG">HG</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select id="poolStatusSelect" class="form-select bg-dark border-secondary text-white" onchange="filterPoolGrid()">
+                                        <option value="">All States</option>
+                                        <option value="true">Deployed</option>
+                                        <option value="false">Available</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-dark table-striped table-hover m-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Rank</th>
+                                            <th>Station</th>
+                                            <th>Age</th>
+                                            <th>Mobile</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="poolTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No rosters loaded. Please process files.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View D: Reports, notification centers -->
+                    <div id="view-reports" class="tab-view d-none">
+                        <div class="card-custom p-4">
+                            <h5 class="card-title-custom text-theme mb-3"><i class="bi bi-file-earmark-pdf-fill me-2"></i>DISPATCH & REPORTS ENGINE</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary border-opacity-10 text-center">
+                                        <i class="bi bi-chat-left-dots-fill text-info fs-1 d-block mb-2"></i>
+                                        <h6 class="fw-bold text-white mb-2">Bulk CDAC / DLT Notifications</h6>
+                                        <p class="text-theme-muted small">Deliver verified SMS alerts with GPS coords to all assigned personnel.</p>
+                                        <button class="btn btn-info text-white w-100 fw-bold mt-2" onclick="sendBulkNotifications()">
+                                            <i class="bi bi-send-fill me-1"></i> SIMULATE DISPATCH
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary border-opacity-10 text-center">
+                                        <i class="bi bi-download text-success fs-1 d-block mb-2"></i>
+                                        <h6 class="fw-bold text-white mb-2">Export Deployment Ledger</h6>
+                                        <p class="text-theme-muted small">Download the entire deployment roster including pre-deployed maps in CSV format.</p>
+                                        <button class="btn btn-success w-100 fw-bold mt-2" onclick="downloadDeploymentCSV()">
+                                            <i class="bi bi-file-earmark-excel-fill me-1"></i> DOWNLOAD CSV
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+
+                <!-- Right Side collapsible Utility panel -->
+                <aside class="right-utility-panel" id="rightPanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary border-opacity-15">
+                        <h6 class="fw-bold mb-0 text-white font-family-serif"><i class="bi bi-journal-text me-2"></i>LIVE ALERTS & LOGS</h6>
+                        <button class="btn-close btn-close-white" onclick="toggleRightPanel()"></button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-warning small fw-bold mb-2 uppercase tracking-wide"><i class="bi bi-exclamation-triangle-fill me-1"></i>Staff Deficits</h6>
+                        <div id="shortageAlerts" class="d-flex flex-column gap-2">
+                            <div class="alert alert-danger py-2 px-3 m-0 small border-0 bg-opacity-10 bg-danger text-danger">No active roster parsed. available pools read empty.</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6 class="text-primary small fw-bold mb-2 uppercase tracking-wide"><i class="bi bi-clock-history me-1"></i>System Activity Feed</h6>
+                        <div id="activityFeed" class="d-flex flex-column gap-2 overflow-y-auto" style="max-height: 400px;">
+                            <div class="activity-item d-flex gap-2 small text-muted border-bottom border-secondary border-opacity-10 pb-2">
+                                <span class="text-primary">●</span>
+                                <div>
+                                    <strong class="text-white">Op-Command System Initialized</strong>
+                                    <div class="text-muted" style="font-size: 0.7rem;">09:00 AM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
             </div>
 
-            <!-- Right Side Workspace & Counter -->
-            <div class="col-lg-8 col-md-7">
-                
-                <!-- Live Availability Panel -->
-                <div class="card card-custom p-4 bg-dark text-white">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="text-info fw-bold mb-0">📊 Global Force Rationing Status & Pool Counter</h5>
-                        <span class="badge bg-secondary" id="lastUpdateTime">Roster Inactive</span>
-                    </div>
-                    <div class="row text-center mb-4">
-                        <div class="col-4">
-                            <span class="text-muted small uppercase">Total Required Force</span>
-                            <h3 id="txtReq" class="text-warning fw-bold">0</h3>
-                        </div>
-                        <div class="col-4">
-                            <span class="text-muted small uppercase">Available Staff Pool</span>
-                            <h3 id="txtAvail" class="text-success fw-bold">0</h3>
-                        </div>
-                        <div class="col-4">
-                            <span class="text-muted small uppercase">Deficit/Coverage Ratio</span>
-                            <h3 id="txtRatio" class="text-danger fw-bold">100%</h3>
-                        </div>
-                    </div>
-                    
-                    <div class="row g-2 text-center text-dark fw-bold">
-                        <div class="col-md-3 col-6">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">DSP</small>
-                                <span id="pool-DSP" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">CI</small>
-                                <span id="pool-CI" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">SI</small>
-                                <span id="pool-SI" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">HC</small>
-                                <span id="pool-HC" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mt-2">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">ASI/HC</small>
-                                <span id="pool-ASI" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mt-2">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">PC</small>
-                                <span id="pool-PC" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mt-2">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">WPC</small>
-                                <span id="pool-WPC" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mt-2">
-                            <div class="bg-light p-2 rounded">
-                                <small class="text-muted d-block">HG</small>
-                                <span id="pool-HG" class="live-counter-badge">0 / 0</span>
-                            </div>
-                        </div>
-                    </div>
+        </div>
 
-                    <div id="rationingAlert" class="alert alert-info mt-4 mb-0 py-2 text-dark d-none"></div>
-                </div>
+    </div>
 
-                <!-- Workspace Workspace Container -->
-                <div class="card card-custom p-4">
-                    <h5 class="card-title-custom">📋 GENERATED BANDOBAST WORKSPACE</h5>
-                    
-                    <div id="initialNotice" class="text-center py-5 text-muted border border-dashed rounded bg-light">
-                        <h5>⚠️ Files Not Loaded Yet</h5>
-                        <p>Upload your CSV files on the left and click <strong>"ANALYZE & GENERATE ALL SECTORS"</strong> to begin planning.</p>
-                    </div>
-                    
-                    <div id="workspaceContainer"></div>
-
-                    <div id="actionBlock" class="d-none mt-4">
-                        <hr>
-                        <div class="d-flex gap-3">
-                            <button class="btn btn-dark flex-grow-1 py-3 fw-bold fs-5" onclick="sendBulkNotifications()">🚀 FINALISE & SEND BULK NOTIFICATIONS</button>
-                            <button class="btn btn-outline-secondary px-4 fw-bold" onclick="downloadDeploymentCSV()">📥 EXPORT REPORT</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+    <!-- Side Personnel Detail Drawer -->
+    <div class="side-drawer" id="personnelDrawer">
+        <div class="drawer-header d-flex justify-content-between align-items-center p-4 border-bottom border-secondary border-opacity-15 bg-dark">
+            <h5 class="fw-bold mb-0" style="font-family: 'Merriweather', serif;"><i class="bi bi-person-badge-fill me-2"></i>Roster Details</h5>
+            <button class="btn-close btn-close-white" onclick="closePersonnelDrawer()"></button>
+        </div>
+        <div class="drawer-body p-4" id="personnelDrawerBody">
+            <!-- Dynamic data output -->
         </div>
     </div>
 
-    <!-- Notification Simulation Modal -->
+    <!-- SMS Dispatch Modal Dialog -->
     <div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title" id="smsModalLabel">📱 Official CDAC / DLT SMS Gateway Dispatch Log</h5>
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary bg-opacity-20 bg-dark">
+                    <h5 class="modal-title font-family-serif" id="smsModalLabel"><i class="bi bi-chat-dots-fill me-2"></i>Official CDAC / DLT SMS Gateway Log</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted">Simulating delivery to verified mobile numbers via safe government gateway routes to prevent Spam blockades.</p>
+                    <p class="text-muted small">Deliveries processed over authorized government routes in compliance with security directives.</p>
                     <div class="input-group mb-3">
-                        <span class="input-group-text">🔍 Filter Logs</span>
-                        <input type="text" id="smsSearchInput" class="form-control" placeholder="Search by name, sector, or number..." onkeyup="filterSMSLogs()">
+                        <span class="input-group-text bg-dark border-secondary text-white">🔍 Search Logs</span>
+                        <input type="text" id="smsSearchInput" class="form-control bg-dark border-secondary text-white" placeholder="Search by name, sector, or number..." onkeyup="filterSMSLogs()">
                     </div>
-                    <div class="table-responsive modal-body-scroll">
-                        <table class="table table-striped table-sm">
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-dark table-striped table-hover table-sm">
                             <thead>
                                 <tr>
                                     <th>Recipient</th>
                                     <th>Mobile</th>
                                     <th>Message Payload</th>
-                                    <th>Status</th>
+                                    <th>Dispatch State</th>
                                 </tr>
                             </thead>
                             <tbody id="smsLogTableBody">
-                                <!-- Log rows dynamically filled -->
+                                <!-- filled dynamically -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-secondary bg-opacity-20 bg-dark">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Dispatch Sheets</button>
                 </div>
@@ -365,7 +773,7 @@
         let rationingRatio = 1.0;
         let detectedSectors = [];
 
-        // Parsing columns
+        // Column detection defaults
         let idxDSP = 2, idxCI = 3, idxSI = 4, idxHC = 5, idxPC = 6, idxWPC = 7, idxHG = 8;
 
         // Custom fail-safe CSV string tokenizer that handles commas embedded inside quotes
@@ -389,6 +797,83 @@
         function normalizeStr(str) {
             if (!str) return '';
             return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        // Toggle Dark/Light Theme
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            let icon = document.getElementById('themeIcon');
+            let text = document.getElementById('themeText');
+            if (document.body.classList.contains('light-theme')) {
+                icon.className = 'bi bi-moon-fill';
+                text.innerText = 'Dark Mode';
+                logActivity("Switched layout theme to Light");
+            } else {
+                icon.className = 'bi bi-sun-fill';
+                text.innerText = 'Light Mode';
+                logActivity("Switched layout theme to Dark");
+            }
+        }
+
+        // Toggle Right Activity Panel
+        function toggleRightPanel() {
+            let panel = document.getElementById('rightPanel');
+            panel.classList.toggle('collapsed');
+        }
+
+        // Tab Views Navigation Switcher
+        function switchView(viewId, element) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('d-none'));
+            let activeView = document.getElementById(`view-${viewId}`);
+            if (activeView) activeView.classList.remove('d-none');
+
+            document.querySelectorAll('.nav-item-custom').forEach(item => item.classList.remove('active'));
+            if (element) element.classList.add('active');
+            logActivity(`Accessed workspace section: ${viewId.toUpperCase()}`);
+        }
+
+        // Drag and Drop helpers
+        function handleFileDrop(e, inputId) {
+            e.preventDefault();
+            let file = e.dataTransfer.files[0];
+            if (file) {
+                let input = document.getElementById(inputId);
+                let dt = new DataTransfer();
+                dt.items.add(file);
+                input.files = dt.files;
+                handleFileSelect(inputId, input);
+            }
+        }
+        function handleFileSelect(inputId, input) {
+            let file = input.files[0];
+            let zone = input.closest('.drag-drop-zone');
+            let preview = zone.querySelector('.file-preview-name');
+            if (file) {
+                preview.innerText = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                preview.classList.remove('d-none');
+                zone.classList.add('border-primary');
+                logActivity(`File validated: ${file.name}`);
+            } else {
+                preview.classList.add('d-none');
+                zone.classList.remove('border-primary');
+            }
+        }
+
+        // Log actions to the activity logs feed
+        function logActivity(text) {
+            let feed = document.getElementById('activityFeed');
+            if (!feed) return;
+            let time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let div = document.createElement('div');
+            div.className = 'activity-item d-flex gap-2 small text-muted border-bottom border-secondary border-opacity-10 pb-2 mb-2';
+            div.innerHTML = `
+                <span class="text-primary">●</span>
+                <div class="flex-grow-1">
+                    <strong class="text-theme">${text}</strong>
+                    <div class="text-muted" style="font-size: 0.7rem;">${time}</div>
+                </div>
+            `;
+            feed.prepend(div);
         }
 
         // Handle Rank Pool retrievals using Code.jpeg corrections
@@ -420,7 +905,7 @@
             }
 
             let rollReader = new FileReader();
-            rollReader.onload = function(e) {
+            rollReader.onload = function (e) {
                 let lines = parseLineToTokens(e.target.result);
                 
                 // Reset staff pools completely
@@ -468,10 +953,10 @@
                     let isFemale = genderVal.includes('F') || genderVal.includes('W') || rankToken.includes('WPC') || name.toUpperCase().includes('WPC');
                     let gender = isFemale ? 'Female' : 'Male';
 
-                    let member = { 
-                        name: name, 
-                        ps: ps, 
-                        mobile: mob || "Available in Roll", 
+                    let member = {
+                        name: name,
+                        ps: ps,
+                        mobile: mob || "Available in Roll",
                         duty: dutyField || null,
                         age: ageVal,
                         gender: gender,
@@ -495,11 +980,13 @@
 
                 // Load Scheme File
                 let schemeReader = new FileReader();
-                schemeReader.onload = function(ev) {
+                schemeReader.onload = function (ev) {
                     schemeDataRows = parseLineToTokens(ev.target.result);
                     detectSectorsAndColumns();
                     checkUnmatchedDuties();
                     renderCompleteWorkspace();
+                    renderPersonnelPoolTable();
+                    logActivity("Rosters and scheme files successfully loaded");
                 };
                 schemeReader.readAsText(fileScheme);
             };
@@ -513,7 +1000,7 @@
                 let uc = cell.toUpperCase();
                 return uc.includes('NAME OF THE POINT') || uc.includes('POINT') || uc.includes('DESCRIPTION');
             }));
-            
+
             if (!headerRow) headerRow = schemeDataRows[1] || [];
 
             idxDSP = headerRow.findIndex(h => h.toUpperCase().trim() === 'DSP');
@@ -537,7 +1024,7 @@
                 if (row.length < 2) return;
                 let c1 = row[0] || '';
                 let c2 = row[1] || '';
-                
+
                 let isSector = false;
                 let sectorLabel = '';
                 for (let cell of row.slice(0, 3)) {
@@ -572,15 +1059,15 @@
 
             let container = document.getElementById('mappingFieldsContainer');
             let card = document.getElementById('mappingCard');
-            
+
             if (unmatched.size > 0) {
                 container.innerHTML = '';
                 unmatched.forEach(duty => {
                     let div = document.createElement('div');
-                    div.className = 'mb-2';
+                    div.className = 'col-md-4 mb-2';
                     div.innerHTML = `
-                        <label class="form-label small fw-bold text-dark mb-1">${duty}</label>
-                        <select class="form-select form-select-sm duty-map-select" data-duty="${duty}">
+                        <label class="form-label small fw-bold text-theme mb-1">${duty}</label>
+                        <select class="form-select form-select-sm bg-dark border-secondary text-white duty-map-select" data-duty="${duty}">
                             <option value="">-- Unassigned (Ignore) --</option>
                             ${detectedSectors.map(sec => `<option value="${sec}">${sec}</option>`).join('')}
                         </select>
@@ -603,18 +1090,17 @@
                     dutyToSectorMap[duty] = targetSector;
                 }
             });
-            
+
             // Re-process workspace with mapping active
             renderCompleteWorkspace();
             alert("Pre-deployment maps successfully updated!");
         }
 
-        // Render Workspace
+        // Render Workspace in Accordions
         function renderCompleteWorkspace() {
             let container = document.getElementById('workspaceContainer');
             container.innerHTML = '';
             document.getElementById('initialNotice').className = 'd-none';
-            document.getElementById('actionBlock').className = 'd-block';
 
             let currentSectorName = null;
             let currentSectorId = 0;
@@ -631,7 +1117,7 @@
 
             schemeDataRows.forEach((row) => {
                 if (row.length < 2) return;
-                
+
                 let isSector = false;
                 let sectorLabel = '';
                 for (let cell of row.slice(0, 3)) {
@@ -646,39 +1132,63 @@
                 if (isSector) {
                     currentSectorId++;
                     currentSectorName = sectorLabel;
-                    
-                    let headerDiv = document.createElement('div');
-                    headerDiv.className = 'sector-header d-flex justify-content-between align-items-center';
-                    headerDiv.innerHTML = `
-                        <span>📌 ${currentSectorName}</span>
-                        <div>
-                            <button class="btn btn-success btn-sm fw-bold me-1 text-white" onclick="fillSector(${currentSectorId})">⚡ FILL SECTOR</button>
-                            <button class="btn btn-danger btn-sm fw-bold" onclick="revokeSector(${currentSectorId})">🔄 REVOKE</button>
+
+                    let accordionItem = document.createElement('div');
+                    accordionItem.className = 'accordion-item border border-secondary border-opacity-15 mb-3 bg-dark bg-opacity-30 rounded-3 overflow-hidden';
+                    accordionItem.innerHTML = `
+                        <h2 class="accordion-header" id="heading-${currentSectorId}">
+                            <div class="accordion-button collapsed bg-dark bg-opacity-70 text-white d-flex justify-content-between align-items-center py-3 px-4 border-0 accordion-button-custom" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${currentSectorId}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-info fs-5"><i class="bi bi-pin-map-fill"></i></span>
+                                    <div>
+                                        <span class="fw-bold text-white font-mono" style="font-size: 0.95rem;">${currentSectorName}</span>
+                                        <small class="text-muted d-block" id="status-meta-${currentSectorId}">Rationed Allocation Pending</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 pe-3" onclick="event.stopPropagation()">
+                                    <span class="badge bg-secondary font-mono" id="counter-badge-${currentSectorId}">0 slots</span>
+                                    <button class="btn btn-success btn-sm py-1 px-3 text-white fw-bold text-uppercase" style="font-size: 0.75rem;" onclick="fillSector(${currentSectorId})">⚡ Fill</button>
+                                    <button class="btn btn-danger btn-sm py-1 px-3 fw-bold text-uppercase" style="font-size: 0.75rem;" onclick="revokeSector(${currentSectorId})">Revoke</button>
+                                </div>
+                            </div>
+                        </h2>
+                        <div id="collapse-${currentSectorId}" class="accordion-collapse collapse" data-bs-parent="#workspaceContainer">
+                            <div class="accordion-body p-4 bg-dark bg-opacity-40 border-top border-secondary border-opacity-15">
+                                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary w-auto" placeholder="Search Point/Officer..." onkeyup="filterSectorTable(${currentSectorId}, this.value)">
+                                        <select class="form-select form-select-sm bg-dark text-white border-secondary w-auto" onchange="filterSectorRank(${currentSectorId}, this.value)">
+                                            <option value="">All Ranks</option>
+                                            <option value="DSP">DSP</option>
+                                            <option value="CI">CI</option>
+                                            <option value="SI">SI</option>
+                                            <option value="ASI/HC">ASI/HC</option>
+                                            <option value="PC">PC</option>
+                                            <option value="HG">HG</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-striped table-hover table-sm m-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:40%">Point Name</th>
+                                                <th style="width:15%">Rank</th>
+                                                <th style="width:35%">Assigned Personnel</th>
+                                                <th style="width:10%">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody-sec-${currentSectorId}"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     `;
-                    container.appendChild(headerDiv);
-
-                    let blockDiv = document.createElement('div');
-                    blockDiv.className = 'point-block table-responsive';
-                    blockDiv.innerHTML = `
-                        <table class="table table-bordered table-sm m-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th style="width:40%">Point Name</th>
-                                    <th style="width:15%">Rank</th>
-                                    <th style="width:35%">Assigned Personnel</th>
-                                    <th style="width:10%">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-sec-${currentSectorId}"></tbody>
-                        </table>
-                    `;
-                    container.appendChild(blockDiv);
+                    container.appendChild(accordionItem);
                     return;
                 }
 
                 let c2 = row[1] || '';
-                // Check if row contains valid points requirements
                 if (currentSectorName && c2 && !c2.toUpperCase().includes('NAME OF THE POINT') && !c2.toUpperCase().includes('OFFICER:')) {
                     let targetTbody = document.getElementById(`tbody-sec-${currentSectorId}`);
                     let ptName = c2;
@@ -696,46 +1206,54 @@
                         totalRequiredForce += totalRowReq;
 
                         const appendRowItem = (rankLabel, count, rankType) => {
-                            for(let i = 0; i < count; i++) {
+                            for (let i = 0; i < count; i++) {
                                 let tr = document.createElement('tr');
                                 tr.setAttribute('data-rank', rankType);
                                 tr.setAttribute('data-point', ptName);
                                 tr.setAttribute('data-sector-label', currentSectorName);
+                                
+                                let vacantRowId = `row-vacant-${currentSectorId}-${i}-${rankType}-${Math.floor(Math.random()*10000)}`;
+                                tr.id = vacantRowId;
                                 tr.className = 'vacant-slot';
 
                                 // Try to match pre-deployed officers for this sector
                                 let matchedPreDeploy = findPreDeployedOfficer(currentSectorName, rankType);
-                                
+
                                 if (matchedPreDeploy) {
                                     matchedPreDeploy.used = true;
                                     matchedPreDeploy.sectorAssigned = currentSectorName;
                                     matchedPreDeploy.pointAssigned = ptName;
-                                    
+
                                     tr.className = 'locked-officer';
                                     tr.innerHTML = `
                                         <td>${ptName}</td>
                                         <td><strong>${rankLabel}</strong></td>
-                                        <td class="p-text">${matchedPreDeploy.name} (${matchedPreDeploy.ps}) - ${matchedPreDeploy.mobile}</td>
+                                        <td class="p-text">
+                                            <span class="officer-clickable text-success cursor-pointer fw-bold" onclick="showPersonnelProfile('${matchedPreDeploy.name}', '${rankType}', '${matchedPreDeploy.ps}', '${matchedPreDeploy.mobile}', ${matchedPreDeploy.age}, '${matchedPreDeploy.gender}', '${currentSectorName}', '${ptName}')"><i class="bi bi-shield-lock-fill me-1"></i>${matchedPreDeploy.name}</span> 
+                                            (${matchedPreDeploy.ps}) - ${matchedPreDeploy.mobile}
+                                        </td>
                                         <td><span class="badge bg-success">[🔒 Pre-Deployed]</span></td>
                                     `;
                                 } else {
                                     tr.innerHTML = `
                                         <td>${ptName}</td>
                                         <td><strong>${rankLabel}</strong></td>
-                                        <td class="p-text fw-bold text-danger">VACANT</td>
-                                        <td><span class="badge bg-secondary">Pending</span></td>
+                                        <td class="p-text fw-bold text-danger cursor-pointer" onclick="openAssignPersonnelDrawer('${rankType}', '${currentSectorName}', '${ptName}', '${vacantRowId}')">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>VACANT (Click to Assign)
+                                        </td>
+                                        <td><span class="badge bg-danger">Pending</span></td>
                                     `;
                                 }
                                 targetTbody.appendChild(tr);
                             }
                         };
 
-                        if(dspNum > 0) appendRowItem('DSP', dspNum, 'DSP');
-                        if(ciNum > 0) appendRowItem('CI', ciNum, 'CI');
-                        if(siNum > 0) appendRowItem('SI', siNum, 'SI');
-                        if(hcNum > 0) appendRowItem('ASI/HC', hcNum, 'ASI/HC');
-                        if(pcNum > 0) appendRowItem('PC', pcNum, 'PC');
-                        if(hgNum > 0) appendRowItem('HG', hgNum, 'HG');
+                        if (dspNum > 0) appendRowItem('DSP', dspNum, 'DSP');
+                        if (ciNum > 0) appendRowItem('CI', ciNum, 'CI');
+                        if (siNum > 0) appendRowItem('SI', siNum, 'SI');
+                        if (hcNum > 0) appendRowItem('ASI/HC', hcNum, 'ASI/HC');
+                        if (pcNum > 0) appendRowItem('PC', pcNum, 'PC');
+                        if (hgNum > 0) appendRowItem('HG', hgNum, 'HG');
                     }
                 }
             });
@@ -749,25 +1267,49 @@
             rationingRatio = totalAvailableForce / totalRequiredForce;
             if (rationingRatio > 1.0) rationingRatio = 1.0;
 
-            document.getElementById('lastUpdateTime').innerText = "Roster Active - Updated just now";
             updateLiveCounters();
+        }
+
+        // Search & Filter inside sector tables
+        function filterSectorTable(secId, query) {
+            let tbody = document.getElementById(`tbody-sec-${secId}`);
+            if (!tbody) return;
+            let rows = tbody.querySelectorAll('tr');
+            let q = query.toUpperCase();
+            rows.forEach(row => {
+                let text = row.innerText.toUpperCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+        function filterSectorRank(secId, rank) {
+            let tbody = document.getElementById(`tbody-sec-${secId}`);
+            if (!tbody) return;
+            let rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                let r = row.getAttribute('data-rank');
+                if (!rank || r === rank) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         }
 
         // Match Pre-deployed Officer based on direct duty or duty map
         function findPreDeployedOfficer(sectorName, rankKey) {
             let pool = getPoolForRank(rankKey);
             let normalizedSec = normalizeStr(sectorName);
-            
+
             return pool.find(member => {
                 if (member.used || !member.duty) return false;
-                
+
                 // Check direct match
                 if (normalizeStr(member.duty) === normalizedSec) return true;
-                
+
                 // Check mapped values
                 let mappedSector = dutyToSectorMap[member.duty];
                 if (mappedSector && normalizeStr(mappedSector) === normalizedSec) return true;
-                
+
                 return false;
             });
         }
@@ -775,7 +1317,7 @@
         // Algorithmic Match Finder
         function findAlgorithmicStaff(rankKey, pointName, currentSectorName, partnerPS = null) {
             let pool = getPoolForRank(rankKey);
-            
+
             // Filters out already used staff & pre-deployed
             let available = pool.filter(p => !p.used && !p.duty);
             if (available.length === 0) return null;
@@ -783,7 +1325,7 @@
             let ptUpper = pointName.toUpperCase();
             let ageRuleChecked = document.getElementById('ageRule').checked;
             let wpcRuleChecked = document.getElementById('wpcRule').checked;
-            
+
             // Age Exclusion Check
             let isLongStandingPoint = ptUpper.includes('ROUTE') || ptUpper.includes('PATROL') || ptUpper.includes('CHECKPOST') || ptUpper.includes('STANDING') || ptUpper.includes('ROAD') || ptUpper.includes('TRAFFIC');
             if (ageRuleChecked && isLongStandingPoint) {
@@ -818,7 +1360,7 @@
         // Fill Sector Data
         function fillSector(secId) {
             let tbody = document.getElementById(`tbody-sec-${secId}`);
-            if(!tbody) return;
+            if (!tbody) return;
 
             let targetRows = Array.from(tbody.querySelectorAll('tr.vacant-slot'));
             let totalSlots = targetRows.length;
@@ -828,11 +1370,11 @@
             let pointPSTracker = {};
 
             targetRows.forEach((row) => {
-                if(allowedSlots <= 0) {
+                if (allowedSlots <= 0) {
                     row.querySelector('.p-text').innerText = "VACANT (Rationed due to Shortage)";
                     return;
                 }
-                
+
                 let rKey = row.getAttribute('data-rank');
                 let pointName = row.getAttribute('data-point');
                 let sectorLabel = row.getAttribute('data-sector-label');
@@ -857,19 +1399,23 @@
                     row.innerHTML = `
                         <td>${pointName}</td>
                         <td><strong>${row.cells[1].innerText}</strong></td>
-                        <td class="p-text">${match.name} (${match.ps}) - ${match.mobile} <span class="badge bg-secondary small">${match.age} yrs</span></td>
+                        <td class="p-text">
+                            <span class="officer-clickable text-info cursor-pointer fw-bold" onclick="showPersonnelProfile('${match.name}', '${rKey}', '${match.ps}', '${match.mobile}', ${match.age}, '${match.gender}', '${sectorLabel}', '${pointName}')"><i class="bi bi-cpu-fill me-1"></i>${match.name}</span> 
+                            (${match.ps}) - ${match.mobile} <span class="badge bg-secondary small">${match.age} yrs</span>
+                        </td>
                         <td><button class="btn btn-outline-danger btn-sm py-0" onclick="revokeSingle(this, '${rKey}', '${match.name}')">Revoke</button></td>
                     `;
                 }
             });
 
             updateLiveCounters();
+            logActivity(`Sector ${secId} filled auto-algorithmically`);
         }
 
         // Revoke Sector Data
         function revokeSector(secId) {
             let tbody = document.getElementById(`tbody-sec-${secId}`);
-            if(!tbody) return;
+            if (!tbody) return;
 
             let sectorLabel = "";
             let autoFilledRows = tbody.querySelectorAll('tr.auto-filled-officer');
@@ -877,7 +1423,7 @@
                 sectorLabel = row.getAttribute('data-sector-label');
                 let rank = row.getAttribute('data-rank');
                 let pt = row.getAttribute('data-point');
-                
+
                 // Release the assigned officer from pool
                 let pool = getPoolForRank(rank);
                 let matched = pool.find(m => m.used && m.sectorAssigned === sectorLabel && m.pointAssigned === pt);
@@ -887,17 +1433,22 @@
                     matched.pointAssigned = null;
                 }
 
+                let rowId = row.id;
+
                 // Reset Row back to Vacant
                 row.className = "vacant-slot";
                 row.innerHTML = `
                     <td>${pt}</td>
                     <td><strong>${row.cells[1].innerText}</strong></td>
-                    <td class="p-text fw-bold text-danger">VACANT</td>
-                    <td><span class="badge bg-secondary">Pending</span></td>
+                    <td class="p-text fw-bold text-danger cursor-pointer" onclick="openAssignPersonnelDrawer('${rank}', '${sectorLabel}', '${pt}', '${rowId}')">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>VACANT (Click to Assign)
+                    </td>
+                    <td><span class="badge bg-danger">Pending</span></td>
                 `;
             });
 
             updateLiveCounters();
+            logActivity(`Revoked deployment assignments for Sector ${secId}`);
         }
 
         // Revoke Single Assignment
@@ -915,22 +1466,146 @@
                 officer.pointAssigned = null;
             }
 
+            let trId = tr.id;
+
             // Reset back to Vacant
             tr.className = "vacant-slot";
             tr.innerHTML = `
                 <td>${pt}</td>
                 <td><strong>${tr.cells[1].innerText}</strong></td>
-                <td class="p-text fw-bold text-danger">VACANT (Revoked by Admin)</td>
-                <td><span class="badge bg-secondary">Admin Revoked</span></td>
+                <td class="p-text fw-bold text-danger cursor-pointer" onclick="openAssignPersonnelDrawer('${rKey}', '${sectorLabel}', '${pt}', '${trId}')">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>VACANT (Click to Assign)
+                </td>
+                <td><span class="badge bg-danger">Admin Revoked</span></td>
             `;
 
             updateLiveCounters();
+            logActivity(`Revoked deployment for ${officerName}`);
+        }
+
+        // Drawer profiles and assignments handlers
+        function showPersonnelProfile(name, rank, ps, mobile, age, gender, sector, point) {
+            let body = document.getElementById('personnelDrawerBody');
+            body.innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="avatar-circle mx-auto mb-3 d-flex align-items-center justify-content-center bg-primary text-white fs-3 fw-bold shadow" style="width: 70px; height: 70px; border-radius: 50%;">
+                        ${name.charAt(0)}
+                    </div>
+                    <h4 class="fw-bold mb-1">${name}</h4>
+                    <span class="badge bg-info text-dark fw-bold mb-3">${rank}</span>
+                </div>
+                
+                <div class="list-group list-group-flush bg-transparent">
+                    <div class="list-group-item bg-transparent text-theme border-secondary border-opacity-15 px-0">
+                        <small class="text-theme-muted d-block">Police Station / Unit</small>
+                        <strong>${ps}</strong>
+                    </div>
+                    <div class="list-group-item bg-transparent text-theme border-secondary border-opacity-15 px-0">
+                        <small class="text-theme-muted d-block">Mobile Contact</small>
+                        <strong>${mobile}</strong>
+                    </div>
+                    <div class="list-group-item bg-transparent text-theme border-secondary border-opacity-15 px-0">
+                        <small class="text-theme-muted d-block">Age / Age Group</small>
+                        <strong>${age} years old</strong>
+                    </div>
+                    <div class="list-group-item bg-transparent text-theme border-secondary border-opacity-15 px-0">
+                        <small class="text-theme-muted d-block">Gender</small>
+                        <strong>${gender}</strong>
+                    </div>
+                    <div class="list-group-item bg-transparent text-theme border-secondary border-opacity-15 px-0">
+                        <small class="text-theme-muted d-block">Current Assignment</small>
+                        <div class="mt-1">
+                            <span class="badge bg-success">Active Duty</span>
+                            <div class="mt-1 small">
+                                <strong>Sector:</strong> ${sector}<br>
+                                <strong>Point:</strong> ${point}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('personnelDrawer').classList.add('open');
+        }
+
+        // Open assignment options in side drawer
+        function openAssignPersonnelDrawer(rKey, sectorName, pointName, trElementId) {
+            let pool = getPoolForRank(rKey);
+            let available = pool.filter(p => !p.used && !p.duty);
+            
+            let body = document.getElementById('personnelDrawerBody');
+            body.innerHTML = `
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-1 text-theme">Deploy Personnel</h5>
+                    <small class="text-theme-muted">Select an officer of rank <strong>${rKey}</strong> for:<br><strong>${pointName}</strong> (${sectorName})</small>
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="drawerSearchInput" class="form-control bg-dark border-secondary text-white" placeholder="Search by name/PS..." onkeyup="filterDrawerList()">
+                </div>
+                <div class="list-group list-group-flush overflow-y-auto" style="max-height: 520px;" id="drawerPersonnelList">
+                    ${available.length === 0 ? `<div class="text-center py-4 text-muted">No available officers found for rank ${rKey}</div>` : 
+                      available.map(p => `
+                        <div class="list-group-item bg-transparent text-theme border-secondary border-opacity-15 px-0 py-3 d-flex justify-content-between align-items-center drawer-item">
+                            <div>
+                                <strong class="d-block">${p.name}</strong>
+                                <small class="text-theme-muted">${p.ps} • ${p.age} yrs</small>
+                            </div>
+                            <button class="btn btn-sm btn-primary py-1 px-3 fw-bold" onclick="manuallyDeployOfficer('${p.name}', '${rKey}', '${sectorName}', '${pointName}', '${trElementId}')">Deploy</button>
+                        </div>
+                      `).join('')}
+                </div>
+            `;
+            
+            document.getElementById('personnelDrawer').classList.add('open');
+        }
+
+        function filterDrawerList() {
+            let val = document.getElementById('drawerSearchInput').value.toUpperCase();
+            let items = document.querySelectorAll('#drawerPersonnelList .drawer-item');
+            items.forEach(item => {
+                let text = item.innerText.toUpperCase();
+                item.style.display = text.includes(val) ? '' : 'none';
+            });
+        }
+
+        function manuallyDeployOfficer(officerName, rankKey, sectorName, pointName, trId) {
+            let pool = getPoolForRank(rankKey);
+            let officer = pool.find(p => p.name === officerName && !p.used);
+            if (officer) {
+                officer.used = true;
+                officer.sectorAssigned = sectorName;
+                officer.pointAssigned = pointName;
+                
+                // Find row in table
+                let tr = document.getElementById(trId);
+                if (tr) {
+                    tr.className = "auto-filled-officer";
+                    tr.innerHTML = `
+                        <td>${pointName}</td>
+                        <td><strong>${rankKey}</strong></td>
+                        <td class="p-text">
+                            <span class="officer-clickable text-info cursor-pointer fw-bold" onclick="showPersonnelProfile('${officer.name}', '${rankKey}', '${officer.ps}', '${officer.mobile}', ${officer.age}, '${officer.gender}', '${sectorName}', '${pointName}')"><i class="bi bi-person-fill"></i> ${officer.name}</span> 
+                            (${officer.ps}) - ${officer.mobile} <span class="badge bg-secondary small">${officer.age} yrs</span>
+                        </td>
+                        <td><button class="btn btn-outline-danger btn-sm py-0" onclick="revokeSingle(this, '${rankKey}', '${officer.name}')">Revoke</button></td>
+                    `;
+                }
+                
+                closePersonnelDrawer();
+                updateLiveCounters();
+                logActivity(`Manually deployed ${officerName} to ${pointName}`);
+            }
+        }
+
+        function closePersonnelDrawer() {
+            document.getElementById('personnelDrawer').classList.remove('open');
         }
 
         // Live Pools Count Updater
         function updateLiveCounters() {
             let required = { 'DSP': 0, 'CI': 0, 'SI': 0, 'ASI/HC': 0, 'HC': 0, 'PC': 0, 'WPC': 0, 'HG': 0 };
-            
+
             let allRows = document.querySelectorAll('#workspaceContainer tr[data-rank]');
             allRows.forEach(row => {
                 let r = row.getAttribute('data-rank');
@@ -942,8 +1617,18 @@
             // Pool Counters
             let totalAvailable = 0;
             let availableUnused = {};
-            
-            for(let r in staffPool) {
+            let totalVacant = 0;
+            let totalFilled = 0;
+
+            allRows.forEach(row => {
+                if (row.classList.contains('locked-officer') || row.classList.contains('auto-filled-officer')) {
+                    totalFilled++;
+                } else {
+                    totalVacant++;
+                }
+            });
+
+            for (let r in staffPool) {
                 totalAvailable += staffPool[r].length;
                 availableUnused[r] = {
                     avail: staffPool[r].filter(p => !p.used).length,
@@ -960,14 +1645,49 @@
             document.getElementById('txtReq').innerText = totalReq;
             document.getElementById('txtAvail').innerText = totalAvailable;
             document.getElementById('txtRatio').innerText = ratioPct + "%";
+            document.getElementById('txtVacancies').innerText = totalVacant;
+            document.getElementById('txtFilled').innerText = totalFilled;
+
+            let activeSectors = detectedSectors.length;
+            document.getElementById('txtActiveSectors').innerText = activeSectors;
+
+            // Update individual accordions status
+            for (let i = 1; i <= activeSectors; i++) {
+                updateSectorMeta(i);
+            }
+
+            // Update deficit panel alerts
+            let shortageDiv = document.getElementById('shortageAlerts');
+            shortageDiv.innerHTML = '';
+            
+            let deficitsFound = false;
+            for (let r in required) {
+                let poolForRank = getPoolForRank(r);
+                let totalAv = poolForRank.length;
+                let needed = required[r];
+                if (totalAv < needed) {
+                    deficitsFound = true;
+                    let alertItem = document.createElement('div');
+                    alertItem.className = 'alert alert-danger py-1.5 px-3 m-0 small border-0 bg-opacity-10 bg-danger text-danger d-flex justify-content-between align-items-center';
+                    alertItem.innerHTML = `
+                        <span><strong>${r}</strong> Shortage</span>
+                        <span class="badge bg-danger">${totalAv} / ${needed}</span>
+                    `;
+                    shortageDiv.appendChild(alertItem);
+                }
+            }
+
+            if (!deficitsFound) {
+                shortageDiv.innerHTML = `<div class="alert alert-success py-2 px-3 m-0 small border-0 bg-opacity-10 bg-success text-success">✅ Staff pools fully covered</div>`;
+            }
 
             let alertDiv = document.getElementById('rationingAlert');
             alertDiv.classList.remove('d-none');
             if (rationingRatio < 1.0) {
-                alertDiv.className = "alert alert-warning mt-3 mb-0 py-2 text-dark fw-bold";
+                alertDiv.className = "alert alert-warning mt-3 mb-0 py-2 text-dark fw-bold shadow-sm";
                 alertDiv.innerHTML = `⚠️ <strong>Rationing Strategy Active (${ratioPct}%):</strong> Understrength staffing limits active. Allocation will fill ${ratioPct}% of points to distribute coverage evenly.`;
             } else {
-                alertDiv.className = "alert alert-success mt-3 mb-0 py-2 text-dark fw-bold";
+                alertDiv.className = "alert alert-success mt-3 mb-0 py-2 text-dark fw-bold shadow-sm";
                 alertDiv.innerHTML = `✅ <strong>100% Allocation Coverage:</strong> Staff numbers match requirements. Deployment fully active.`;
             }
 
@@ -980,18 +1700,105 @@
             document.getElementById('pool-PC').innerText = `${availableUnused['PC'].avail} / ${availableUnused['PC'].total}`;
             document.getElementById('pool-WPC').innerText = `${availableUnused['WPC'].avail} / ${availableUnused['WPC'].total}`;
             document.getElementById('pool-HG').innerText = `${availableUnused['HG'].avail} / ${availableUnused['HG'].total}`;
+
+            renderPersonnelPoolTable();
+        }
+
+        // Render meta information on accordions
+        function updateSectorMeta(secId) {
+            let tbody = document.getElementById(`tbody-sec-${secId}`);
+            if (!tbody) return;
+            let rows = tbody.querySelectorAll('tr[data-rank]');
+            let total = rows.length;
+            let filled = 0;
+            rows.forEach(r => {
+                if (r.classList.contains('locked-officer') || r.classList.contains('auto-filled-officer')) {
+                    filled++;
+                }
+            });
+            let pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+            let badge = document.getElementById(`counter-badge-${secId}`);
+            if (badge) {
+                badge.innerText = `${filled} / ${total} slots`;
+                badge.className = `badge font-mono bg-${pct === 100 ? 'success' : pct > 0 ? 'warning text-dark' : 'secondary'}`;
+            }
+            let meta = document.getElementById(`status-meta-${secId}`);
+            if (meta) {
+                meta.innerText = `${pct}% Filled (${filled} Assigned, ${total - filled} Vacant)`;
+                meta.className = `d-block small text-${pct === 100 ? 'success' : pct > 0 ? 'warning' : 'muted'}`;
+            }
+        }
+
+        // Render Personnel pool list view
+        function renderPersonnelPoolTable() {
+            let tbody = document.getElementById('poolTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            let count = 0;
+            for (let rank in staffPool) {
+                staffPool[rank].forEach(p => {
+                    count++;
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${p.name}</strong></td>
+                        <td><span class="badge bg-secondary font-mono">${rank}</span></td>
+                        <td>${p.ps}</td>
+                        <td>${p.age}</td>
+                        <td><code>${p.mobile}</code></td>
+                        <td>
+                            <span class="badge bg-${p.used ? 'success' : 'primary'}">
+                                ${p.used ? 'Deployed' : 'Available'}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            if (count === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No rosters loaded. Please process files.</td></tr>`;
+            }
+        }
+
+        // Pool search and filters
+        function filterPoolGrid() {
+            let query = document.getElementById('poolSearchInput').value.toUpperCase();
+            let rank = document.getElementById('poolRankSelect').value;
+            let state = document.getElementById('poolStatusSelect').value;
+
+            let rows = document.querySelectorAll('#poolTableBody tr');
+            rows.forEach(row => {
+                if (row.cells.length < 5) return;
+                let text = row.innerText.toUpperCase();
+                let rText = row.cells[1].innerText;
+                let stateText = row.cells[5].innerText.trim();
+
+                let matchesQuery = text.includes(query);
+                let matchesRank = !rank || rText === rank;
+                
+                let matchesState = true;
+                if (state === 'true') matchesState = stateText === 'Deployed';
+                if (state === 'false') matchesState = stateText === 'Available';
+
+                if (matchesQuery && matchesRank && matchesState) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         }
 
         // Top Up Logic
         function executeTopUp() {
             let f = document.getElementById('additionalFile').files[0];
-            if(!f) { 
-                alert("Please select an additional force nominal roll CSV file."); 
-                return; 
+            if (!f) {
+                alert("Please select an additional force nominal roll CSV file.");
+                return;
             }
 
             let topUpReader = new FileReader();
-            topUpReader.onload = function(e) {
+            topUpReader.onload = function (e) {
                 let lines = parseLineToTokens(e.target.result);
                 let topUpCount = 0;
 
@@ -1029,10 +1836,10 @@
                     let isFemale = genderVal.includes('F') || genderVal.includes('W') || rankToken.includes('WPC') || name.toUpperCase().includes('WPC');
                     let gender = isFemale ? 'Female' : 'Male';
 
-                    let member = { 
-                        name: name, 
-                        ps: ps, 
-                        mobile: mob || "Available in Roll", 
+                    let member = {
+                        name: name,
+                        ps: ps,
+                        mobile: mob || "Available in Roll",
                         duty: null,
                         age: ageVal,
                         gender: gender,
@@ -1080,7 +1887,10 @@
                         row.innerHTML = `
                             <td>${pointName}</td>
                             <td><strong>${row.cells[1].innerText}</strong></td>
-                            <td class="p-text">${match.name} (${match.ps}) - ${match.mobile} <span class="badge bg-secondary small">${match.age} yrs</span></td>
+                            <td class="p-text">
+                                <span class="officer-clickable text-info cursor-pointer fw-bold" onclick="showPersonnelProfile('${match.name}', '${rKey}', '${match.ps}', '${match.mobile}', ${match.age}, '${match.gender}', '${sectorLabel}', '${pointName}')"><i class="bi bi-cpu-fill me-1"></i>${match.name}</span> 
+                                (${match.ps}) - ${match.mobile} <span class="badge bg-secondary small">${match.age} yrs</span>
+                            </td>
                             <td><button class="btn btn-outline-danger btn-sm py-0" onclick="revokeSingle(this, '${rKey}', '${match.name}')">Revoke</button></td>
                         `;
                     }
@@ -1088,17 +1898,18 @@
 
                 updateLiveCounters();
                 alert(`Top-up successful! Added ${topUpCount} new staff. Vacancies filled where possible.`);
+                logActivity(`Executed Top-Up: ${topUpCount} officers added`);
             };
             topUpReader.readAsText(f);
         }
 
         // SMS / WhatsApp Dispatch logs simulation
         let simulatedSMSLogs = [];
-        
+
         function sendBulkNotifications() {
             simulatedSMSLogs = [];
             let allFilledRows = document.querySelectorAll('#workspaceContainer tr.auto-filled-officer, #workspaceContainer tr.locked-officer');
-            
+
             if (allFilledRows.length === 0) {
                 alert("No officers are currently deployed. Please process files and fill sectors first.");
                 return;
@@ -1109,9 +1920,9 @@
                 let point = row.getAttribute('data-point');
                 let rank = row.cells[1].innerText;
                 let detailsText = row.querySelector('.p-text').innerText;
-                
+
                 // Parse Name & Mobile from details text: "Name (PS) - Mobile [age]"
-                let name = detailsText.split('(')[0].trim();
+                let name = detailsText.split('(')[0].replace(/🔒|🤖|👤/g, '').trim();
                 let remaining = detailsText.split(')')[1] || '';
                 let mobile = remaining.split('-')[1] ? remaining.split('-')[1].split(' ')[1] || 'Available in Roll' : 'Available in Roll';
                 mobile = mobile.replace(/[^0-9]/g, '');
@@ -1119,7 +1930,7 @@
                 if (!mobile || mobile.length < 5) mobile = "9949830873"; // fallback placeholder
 
                 let msg = `CDAC GOVT GATEWAY SMS: Dear ${name} (${rank}), you are deployed at ${point} (${sector}) for VVIP Bandobast Duty. Please report to your sector charge immediately.`;
-                
+
                 simulatedSMSLogs.push({
                     name: name + ` (${rank})`,
                     mobile: mobile,
@@ -1144,6 +1955,7 @@
 
             let myModal = new bootstrap.Modal(document.getElementById('smsModal'));
             myModal.show();
+            logActivity(`Dispatched ${simulatedSMSLogs.length} gateway SMS alerts`);
         }
 
         function filterSMSLogs() {
@@ -1159,7 +1971,7 @@
         function downloadDeploymentCSV() {
             let csvContent = "data:text/csv;charset=utf-8,Sector,Point Name,Required Rank,Assigned Personnel,Status\n";
             let rows = document.querySelectorAll('#workspaceContainer tr[data-rank]');
-            
+
             if (rows.length === 0) {
                 alert("Nothing to export. Load files first.");
                 return;
@@ -1171,7 +1983,7 @@
                 let rank = row.cells[1].innerText;
                 let details = row.querySelector('.p-text').innerText.replace(/,/g, ' ');
                 let status = row.querySelector('.badge') ? row.querySelector('.badge').innerText : "Auto-Filled";
-                
+
                 csvContent += `"${sector}","${point}","${rank}","${details}","${status}"\n`;
             });
 
@@ -1182,6 +1994,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            logActivity("Exported deployment roster CSV");
         }
     </script>
 </body>
