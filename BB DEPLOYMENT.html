@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VVIP Bandobast Auto-Deployment & Rationing Engine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gov-navy: #0b1c3c;
+            --gov-navy-light: #172e59;
+            --gov-gold: #cca052;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --border: #d1d5db;
+            --border-heavy: #9ca3af;
+            --success-green: #10b981;
+            --warning-yellow: #f59e0b;
+            --danger-red: #ef4444;
+        }
+
+        body { 
+            background-color: var(--bg); 
+            font-family: 'Inter', sans-serif; 
+            color: #111827;
+        }
+
+        .header-wrapper {
+            background: var(--gov-navy);
+            border-bottom: 4px solid var(--gov-gold);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-title {
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+        }
+
+        .card-custom { 
+            border-radius: 6px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+            background: var(--surface);
+        }
+
+        .card-title-custom {
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+            color: var(--gov-navy);
+            border-bottom: 2px solid var(--gov-gold);
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+        }
+
+        .sector-header { 
+            background-color: var(--gov-navy); 
+            color: white; 
+            font-weight: bold; 
+            padding: 12px; 
+            border-radius: 6px 6px 0 0; 
+            margin-top: 25px; 
+        }
+
+        .point-block { 
+            background: white; 
+            border: 1px solid var(--border); 
+            padding: 15px; 
+            border-top: none; 
+            margin-bottom: 15px; 
+            border-radius: 0 0 6px 6px;
+        }
+
+        .locked-officer { 
+            background-color: #e2f0d9; 
+            border-left: 5px solid #385723; 
+            color: #385723; 
+            font-weight: 500; 
+        }
+
+        .auto-filled-officer { 
+            background-color: #fff2cc; 
+            border-left: 5px solid #d4a373; 
+            color: #7f6000; 
+            font-weight: 500; 
+        }
+
+        .vacant-slot { 
+            background-color: #fce4d6; 
+            border-left: 5px solid #c65911; 
+            color: #c65911; 
+            font-weight: 500;
+        }
+
+        .table-sm th, .table-sm td { 
+            padding: 8px 12px; 
+            vertical-align: middle; 
+        }
+
+        .live-counter-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Hover and transition effects */
+        .btn {
+            transition: all 0.2s ease-in-out;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Modal custom scrollbar */
+        .modal-body-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="header-wrapper">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem of India" style="width: 32px; height: auto; filter: brightness(0) invert(1);">
+                <div>
+                    <h2 class="header-title mb-0" style="font-size: 1.4rem;">🛡️ VVIP BANDOBAST AUTO-DEPLOYMENT & RATIONING SYSTEM</h2>
+                    <small style="color: #cbd5e1; letter-spacing: 0.5px;">POLICE DEPARTMENT ADMINISTRATIVE WORKSPACE</small>
+                </div>
+            </div>
+            <div>
+                <span class="badge bg-danger p-2">PRO REGIME ACTIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="row">
+            
+            <!-- Left Side Inputs & Controls -->
+            <div class="col-lg-4 col-md-5">
+                
+                <!-- Box A & B Upload -->
+                <div class="card card-custom p-4">
+                    <h5 class="card-title-custom">📥 CORE DATA INPUTS</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Box A: Upload BB Scheme (CSV)</label>
+                        <input type="file" id="schemeFile" class="form-control" accept=".csv">
+                        <small class="text-muted">Upload sector requirements with rank counts.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Box B: Upload Nominal Roll (CSV)</label>
+                        <input type="file" id="nominalFile" class="form-control" accept=".csv">
+                        <small class="text-muted">Upload the master roster of available officers.</small>
+                    </div>
+                    <button class="btn btn-primary w-100 py-2 mt-2 fw-bold" onclick="processPoliceFiles()">🔄 ANALYZE & GENERATE ALL SECTORS</button>
+                </div>
+
+                <!-- Dynamic Pre-deployment Sector Mapping Card -->
+                <div class="card card-custom p-4 border-info d-none" id="mappingCard">
+                    <h5 class="card-title-custom text-info">🗺️ PRE-DEPLOYMENT DUTY MAPPING</h5>
+                    <p class="text-muted small">We found unmatched duties in the Nominal Roll. Map them to the BB Scheme sectors below to align pre-deployed staff:</p>
+                    <div id="mappingFieldsContainer" class="mb-3">
+                        <!-- Dynamically filled mapping dropdowns -->
+                    </div>
+                    <button class="btn btn-info text-white w-100 fw-bold" onclick="applyPreDeploymentMapping()">🔗 Apply Map & Re-Process</button>
+                </div>
+
+                <!-- Custom Rule Filters -->
+                <div class="card card-custom p-4">
+                    <h5 class="card-title-custom">⚙️ CUSTOM ALGORITHMIC FILTERS</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="ageRule" checked>
+                        <label class="form-check-label fw-semibold" for="ageRule">Age > 55 Exclusion Rule</label>
+                        <small class="d-block text-muted">Do not deploy older personnel to demanding route/checkpost duty points.</small>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="wpcRule" checked>
+                        <label class="form-check-label fw-semibold" for="wpcRule">VIP Points WPC Priority</label>
+                        <small class="d-block text-muted">Restrict/Prioritize female personnel (WPC) for VIP enclosures & Shamiana duties.</small>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="psPairingRule">
+                        <label class="form-check-label fw-semibold" for="psPairingRule">Same Station (PS) Pairing</label>
+                        <small class="d-block text-muted">Attempt to deploy Constables/HCs from the same Police Station in pairs.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Manual Directive Notes (Optional)</label>
+                        <textarea class="form-control" id="manualDirectiveText" rows="2" placeholder="e.g. Restrict Home Guards to traffic support only..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Force Top-up -->
+                <div class="card card-custom p-4 border-warning">
+                    <h5 class="card-title-custom text-warning">⚡ ADDITIONAL FORCE TOP-UP</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Upload Additional Force (CSV)</label>
+                        <input type="file" id="additionalFile" class="form-control" accept=".csv">
+                        <small class="text-muted">Top up remaining vacancies without affecting locked/filled spots.</small>
+                    </div>
+                    <button class="btn btn-warning w-100 fw-bold" onclick="executeTopUp()">⚡ Top-Up Vacancies Only</button>
+                </div>
+            </div>
+
+            <!-- Right Side Workspace & Counter -->
+            <div class="col-lg-8 col-md-7">
+                
+                <!-- Live Availability Panel -->
+                <div class="card card-custom p-4 bg-dark text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-info fw-bold mb-0">📊 Global Force Rationing Status & Pool Counter</h5>
+                        <span class="badge bg-secondary" id="lastUpdateTime">Roster Inactive</span>
+                    </div>
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <span class="text-muted small uppercase">Total Required Force</span>
+                            <h3 id="txtReq" class="text-warning fw-bold">0</h3>
+                        </div>
+                        <div class="col-4">
+                            <span class="text-muted small uppercase">Available Staff Pool</span>
+                            <h3 id="txtAvail" class="text-success fw-bold">0</h3>
+                        </div>
+                        <div class="col-4">
+                            <span class="text-muted small uppercase">Deficit/Coverage Ratio</span>
+                            <h3 id="txtRatio" class="text-danger fw-bold">100%</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 text-center text-dark fw-bold">
+                        <div class="col-md-3 col-6">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">DSP</small>
+                                <span id="pool-DSP" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">CI</small>
+                                <span id="pool-CI" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">SI</small>
+                                <span id="pool-SI" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">HC</small>
+                                <span id="pool-HC" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mt-2">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">ASI/HC</small>
+                                <span id="pool-ASI" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mt-2">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">PC</small>
+                                <span id="pool-PC" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mt-2">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">WPC</small>
+                                <span id="pool-WPC" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mt-2">
+                            <div class="bg-light p-2 rounded">
+                                <small class="text-muted d-block">HG</small>
+                                <span id="pool-HG" class="live-counter-badge">0 / 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="rationingAlert" class="alert alert-info mt-4 mb-0 py-2 text-dark d-none"></div>
+                </div>
+
+                <!-- Workspace Workspace Container -->
+                <div class="card card-custom p-4">
+                    <h5 class="card-title-custom">📋 GENERATED BANDOBAST WORKSPACE</h5>
+                    
+                    <div id="initialNotice" class="text-center py-5 text-muted border border-dashed rounded bg-light">
+                        <h5>⚠️ Files Not Loaded Yet</h5>
+                        <p>Upload your CSV files on the left and click <strong>"ANALYZE & GENERATE ALL SECTORS"</strong> to begin planning.</p>
+                    </div>
+                    
+                    <div id="workspaceContainer"></div>
+
+                    <div id="actionBlock" class="d-none mt-4">
+                        <hr>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-dark flex-grow-1 py-3 fw-bold fs-5" onclick="sendBulkNotifications()">🚀 FINALISE & SEND BULK NOTIFICATIONS</button>
+                            <button class="btn btn-outline-secondary px-4 fw-bold" onclick="downloadDeploymentCSV()">📥 EXPORT REPORT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notification Simulation Modal -->
+    <div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="smsModalLabel">📱 Official CDAC / DLT SMS Gateway Dispatch Log</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Simulating delivery to verified mobile numbers via safe government gateway routes to prevent Spam blockades.</p>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">🔍 Filter Logs</span>
+                        <input type="text" id="smsSearchInput" class="form-control" placeholder="Search by name, sector, or number..." onkeyup="filterSMSLogs()">
+                    </div>
+                    <div class="table-responsive modal-body-scroll">
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Recipient</th>
+                                    <th>Mobile</th>
+                                    <th>Message Payload</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smsLogTableBody">
+                                <!-- Log rows dynamically filled -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Dispatch Sheets</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // System variables
+        let schemeDataRows = [];
+        let staffPool = {
+            'DSP': [], 'CI': [], 'SI': [], 'ASI/HC': [], 'HC': [], 'PC': [], 'WPC': [], 'HG': []
+        };
+        let uniqueUnmatchedDuties = new Set();
+        let dutyToSectorMap = {}; // Maps Nominal Roll duty labels to Scheme Sectors
+        let rationingRatio = 1.0;
+        let detectedSectors = [];
+
+        // Parsing columns
+        let idxDSP = 2, idxCI = 3, idxSI = 4, idxHC = 5, idxPC = 6, idxWPC = 7, idxHG = 8;
+
+        // Custom fail-safe CSV string tokenizer that handles commas embedded inside quotes
+        function parseLineToTokens(text) {
+            let lines = text.split(/\r?\n/);
+            return lines.map(line => {
+                let tokens = [];
+                let isInsideQuote = false;
+                let currentToken = '';
+                for (let i = 0; i < line.length; i++) {
+                    let char = line[i];
+                    if (char === '"') { isInsideQuote = !isInsideQuote; }
+                    else if (char === ',' && !isInsideQuote) { tokens.push(currentToken.trim()); currentToken = ''; }
+                    else { currentToken += char; }
+                }
+                tokens.push(currentToken.trim());
+                return tokens;
+            }).filter(tokens => tokens.length > 0 && tokens.some(t => t !== ''));
+        }
+
+        function normalizeStr(str) {
+            if (!str) return '';
+            return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        // Handle Rank Pool retrievals using Code.jpeg corrections
+        function getPoolForRank(rKey) {
+            let pool = [];
+            // Rank Mapping Correction from Code.jpeg
+            if (rKey === 'ASI/HC') {
+                pool = (staffPool['ASI/HC'] || []).concat(staffPool['HC'] || []);
+            } else if (rKey === 'HC') {
+                pool = (staffPool['HC'] || []).concat(staffPool['ASI/HC'] || []);
+            } else if (rKey === 'PC') {
+                pool = (staffPool['PC'] || []).concat(staffPool['WPC'] || []);
+            } else if (rKey === 'WPC') {
+                pool = (staffPool['WPC'] || []).concat(staffPool['PC'] || []);
+            } else {
+                pool = staffPool[rKey] || [];
+            }
+            return pool;
+        }
+
+        // CSV Processor for Scheme and Nominal Roll
+        function processPoliceFiles() {
+            let fileScheme = document.getElementById('schemeFile').files[0];
+            let fileNominal = document.getElementById('nominalFile').files[0];
+
+            if (!fileScheme || !fileNominal) {
+                alert("Please select both Scheme and Nominal Roll CSV files.");
+                return;
+            }
+
+            let rollReader = new FileReader();
+            rollReader.onload = function(e) {
+                let lines = parseLineToTokens(e.target.result);
+                
+                // Reset staff pools completely
+                for (let r in staffPool) staffPool[r] = [];
+                uniqueUnmatchedDuties.clear();
+
+                // Auto-detect columns in nominal roll
+                let headers = lines[0] ? lines[0].map(h => h.toUpperCase().trim()) : [];
+                let nRank = headers.findIndex(h => h.includes('RANK'));
+                let nName = headers.findIndex(h => h.includes('NAME'));
+                let nPS = headers.findIndex(h => h.includes('STATION') || h.includes('PS') || h.includes('UNIT'));
+                let nMob = headers.findIndex(h => h.includes('MOBILE') || h.includes('PHONE') || h.includes('CELL'));
+                let nDuty = headers.findIndex(h => h.includes('DUTY') || h.includes('PLACE') || h.includes('SECTOR') || h.includes('ASSIGN'));
+                let nAge = headers.findIndex(h => h.includes('AGE') || h.includes('DOB'));
+                let nGender = headers.findIndex(h => h.includes('GENDER') || h.includes('SEX'));
+
+                // Fallbacks if not auto-detected
+                if (nRank === -1) nRank = 1;
+                if (nName === -1) nName = 3;
+                if (nPS === -1) nPS = 4;
+                if (nMob === -1) nMob = 5;
+                if (nDuty === -1) nDuty = 6;
+                if (nAge === -1) nAge = 7;
+                if (nGender === -1) nGender = 8;
+
+                lines.forEach((parts, idx) => {
+                    if (idx === 0 || parts.length < 3) return; // Skip headers/empty
+
+                    let rankToken = parts[nRank] ? parts[nRank].toUpperCase().trim() : '';
+                    let name = parts[nName] ? parts[nName].trim() : '';
+                    let ps = parts[nPS] ? parts[nPS].trim() : '';
+                    let mob = parts[nMob] ? parts[nMob].trim() : '';
+                    let dutyField = parts[nDuty] ? parts[nDuty].trim() : '';
+                    let ageVal = parts[nAge] ? parseInt(parts[nAge]) : null;
+                    let genderVal = parts[nGender] ? parts[nGender].trim().toUpperCase() : '';
+
+                    if (!name || name.toUpperCase().includes('NAME')) return;
+
+                    // Fallback random age if not specified
+                    if (!ageVal || isNaN(ageVal)) {
+                        ageVal = Math.floor(Math.random() * (58 - 23 + 1)) + 23;
+                    }
+
+                    // Gender detection
+                    let isFemale = genderVal.includes('F') || genderVal.includes('W') || rankToken.includes('WPC') || name.toUpperCase().includes('WPC');
+                    let gender = isFemale ? 'Female' : 'Male';
+
+                    let member = { 
+                        name: name, 
+                        ps: ps, 
+                        mobile: mob || "Available in Roll", 
+                        duty: dutyField || null,
+                        age: ageVal,
+                        gender: gender,
+                        used: false,
+                        sectorAssigned: null,
+                        pointAssigned: null,
+                        rank: rankToken
+                    };
+
+                    // Distribute into buckets
+                    if (rankToken.includes('DSP')) staffPool['DSP'].push(member);
+                    else if (rankToken.includes('CI') || rankToken.includes('INSPECTOR') || rankToken.includes('INSP')) staffPool['CI'].push(member);
+                    else if (rankToken.includes('SI')) staffPool['SI'].push(member);
+                    else if (rankToken.includes('ASI')) staffPool['ASI/HC'].push(member);
+                    else if (rankToken.includes('HC') || rankToken.includes('HEAD')) staffPool['HC'].push(member);
+                    else if (rankToken.includes('WPC')) staffPool['WPC'].push(member);
+                    else if (rankToken.includes('PC')) staffPool['PC'].push(member);
+                    else if (rankToken.includes('HG') || rankToken.includes('HOME')) staffPool['HG'].push(member);
+                    else staffPool['PC'].push(member); // default fallback
+                });
+
+                // Load Scheme File
+                let schemeReader = new FileReader();
+                schemeReader.onload = function(ev) {
+                    schemeDataRows = parseLineToTokens(ev.target.result);
+                    detectSectorsAndColumns();
+                    checkUnmatchedDuties();
+                    renderCompleteWorkspace();
+                };
+                schemeReader.readAsText(fileScheme);
+            };
+            rollReader.readAsText(fileNominal);
+        }
+
+        // Detect Columns and Sectors
+        function detectSectorsAndColumns() {
+            detectedSectors = [];
+            let headerRow = schemeDataRows.find(row => row.some(cell => {
+                let uc = cell.toUpperCase();
+                return uc.includes('NAME OF THE POINT') || uc.includes('POINT') || uc.includes('DESCRIPTION');
+            }));
+            
+            if (!headerRow) headerRow = schemeDataRows[1] || [];
+
+            idxDSP = headerRow.findIndex(h => h.toUpperCase().trim() === 'DSP');
+            idxCI = headerRow.findIndex(h => h.toUpperCase().includes('CI') || h.toUpperCase().includes('INSP'));
+            idxSI = headerRow.findIndex(h => h.toUpperCase().trim() === 'SI');
+            idxHC = headerRow.findIndex(h => h.toUpperCase().includes('ASI') || h.toUpperCase().includes('HC'));
+            idxPC = headerRow.findIndex(h => h.toUpperCase().trim() === 'PC');
+            idxWPC = headerRow.findIndex(h => h.toUpperCase().trim() === 'WPC');
+            idxHG = headerRow.findIndex(h => h.toUpperCase().trim() === 'HG');
+
+            // Fallback index maps if columns missing headers
+            if (idxDSP === -1) idxDSP = 2;
+            if (idxCI === -1) idxCI = 3;
+            if (idxSI === -1) idxSI = 4;
+            if (idxHC === -1) idxHC = 5;
+            if (idxPC === -1) idxPC = 6;
+            if (idxWPC === -1) idxWPC = 7;
+            if (idxHG === -1) idxHG = 8;
+
+            schemeDataRows.forEach(row => {
+                if (row.length < 2) return;
+                let c1 = row[0] || '';
+                let c2 = row[1] || '';
+                
+                let isSector = false;
+                let sectorLabel = '';
+                for (let cell of row.slice(0, 3)) {
+                    let uc = cell.toUpperCase();
+                    if (uc.includes('SECTOR') || uc.includes('HELIPAD') || uc.includes('ROUTE') || uc.includes('STAGE')) {
+                        isSector = true;
+                        sectorLabel = cell.trim();
+                        break;
+                    }
+                }
+
+                if (isSector && !detectedSectors.includes(sectorLabel)) {
+                    detectedSectors.push(sectorLabel);
+                }
+            });
+        }
+
+        // Scan for unmatched duties in Nominal Roll to request mapping
+        function checkUnmatchedDuties() {
+            let unmatched = new Set();
+            for (let rank in staffPool) {
+                staffPool[rank].forEach(member => {
+                    if (member.duty) {
+                        let normalizedDuty = normalizeStr(member.duty);
+                        let hasExactMatch = detectedSectors.some(sec => normalizeStr(sec) === normalizedDuty);
+                        if (!hasExactMatch && !dutyToSectorMap[member.duty]) {
+                            unmatched.add(member.duty);
+                        }
+                    }
+                });
+            }
+
+            let container = document.getElementById('mappingFieldsContainer');
+            let card = document.getElementById('mappingCard');
+            
+            if (unmatched.size > 0) {
+                container.innerHTML = '';
+                unmatched.forEach(duty => {
+                    let div = document.createElement('div');
+                    div.className = 'mb-2';
+                    div.innerHTML = `
+                        <label class="form-label small fw-bold text-dark mb-1">${duty}</label>
+                        <select class="form-select form-select-sm duty-map-select" data-duty="${duty}">
+                            <option value="">-- Unassigned (Ignore) --</option>
+                            ${detectedSectors.map(sec => `<option value="${sec}">${sec}</option>`).join('')}
+                        </select>
+                    `;
+                    container.appendChild(div);
+                });
+                card.classList.remove('d-none');
+            } else {
+                card.classList.add('d-none');
+            }
+        }
+
+        // Apply Manual Duty Mapping
+        function applyPreDeploymentMapping() {
+            let selects = document.querySelectorAll('.duty-map-select');
+            selects.forEach(select => {
+                let duty = select.getAttribute('data-duty');
+                let targetSector = select.value;
+                if (targetSector) {
+                    dutyToSectorMap[duty] = targetSector;
+                }
+            });
+            
+            // Re-process workspace with mapping active
+            renderCompleteWorkspace();
+            alert("Pre-deployment maps successfully updated!");
+        }
+
+        // Render Workspace
+        function renderCompleteWorkspace() {
+            let container = document.getElementById('workspaceContainer');
+            container.innerHTML = '';
+            document.getElementById('initialNotice').className = 'd-none';
+            document.getElementById('actionBlock').className = 'd-block';
+
+            let currentSectorName = null;
+            let currentSectorId = 0;
+            let totalRequiredForce = 0;
+
+            // Reset usage assignments
+            for (let rank in staffPool) {
+                staffPool[rank].forEach(m => {
+                    m.used = false;
+                    m.sectorAssigned = null;
+                    m.pointAssigned = null;
+                });
+            }
+
+            schemeDataRows.forEach((row) => {
+                if (row.length < 2) return;
+                
+                let isSector = false;
+                let sectorLabel = '';
+                for (let cell of row.slice(0, 3)) {
+                    let uc = cell.toUpperCase();
+                    if (uc.includes('SECTOR') || uc.includes('HELIPAD') || uc.includes('ROUTE') || uc.includes('STAGE')) {
+                        isSector = true;
+                        sectorLabel = cell.trim();
+                        break;
+                    }
+                }
+
+                if (isSector) {
+                    currentSectorId++;
+                    currentSectorName = sectorLabel;
+                    
+                    let headerDiv = document.createElement('div');
+                    headerDiv.className = 'sector-header d-flex justify-content-between align-items-center';
+                    headerDiv.innerHTML = `
+                        <span>📌 ${currentSectorName}</span>
+                        <div>
+                            <button class="btn btn-success btn-sm fw-bold me-1 text-white" onclick="fillSector(${currentSectorId})">⚡ FILL SECTOR</button>
+                            <button class="btn btn-danger btn-sm fw-bold" onclick="revokeSector(${currentSectorId})">🔄 REVOKE</button>
+                        </div>
+                    `;
+                    container.appendChild(headerDiv);
+
+                    let blockDiv = document.createElement('div');
+                    blockDiv.className = 'point-block table-responsive';
+                    blockDiv.innerHTML = `
+                        <table class="table table-bordered table-sm m-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width:40%">Point Name</th>
+                                    <th style="width:15%">Rank</th>
+                                    <th style="width:35%">Assigned Personnel</th>
+                                    <th style="width:10%">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-sec-${currentSectorId}"></tbody>
+                        </table>
+                    `;
+                    container.appendChild(blockDiv);
+                    return;
+                }
+
+                let c2 = row[1] || '';
+                // Check if row contains valid points requirements
+                if (currentSectorName && c2 && !c2.toUpperCase().includes('NAME OF THE POINT') && !c2.toUpperCase().includes('OFFICER:')) {
+                    let targetTbody = document.getElementById(`tbody-sec-${currentSectorId}`);
+                    let ptName = c2;
+
+                    let dspNum = parseInt(row[idxDSP]) || 0;
+                    let ciNum = parseInt(row[idxCI]) || 0;
+                    let siNum = parseInt(row[idxSI]) || 0;
+                    let hcNum = parseInt(row[idxHC]) || 0;
+                    let pcNum = (parseInt(row[idxPC]) || 0) + (parseInt(row[idxWPC]) || 0);
+                    let hgNum = parseInt(row[idxHG]) || 0;
+
+                    let totalRowReq = dspNum + ciNum + siNum + hcNum + pcNum + hgNum;
+
+                    if (totalRowReq > 0) {
+                        totalRequiredForce += totalRowReq;
+
+                        const appendRowItem = (rankLabel, count, rankType) => {
+                            for(let i = 0; i < count; i++) {
+                                let tr = document.createElement('tr');
+                                tr.setAttribute('data-rank', rankType);
+                                tr.setAttribute('data-point', ptName);
+                                tr.setAttribute('data-sector-label', currentSectorName);
+                                tr.className = 'vacant-slot';
+
+                                // Try to match pre-deployed officers for this sector
+                                let matchedPreDeploy = findPreDeployedOfficer(currentSectorName, rankType);
+                                
+                                if (matchedPreDeploy) {
+                                    matchedPreDeploy.used = true;
+                                    matchedPreDeploy.sectorAssigned = currentSectorName;
+                                    matchedPreDeploy.pointAssigned = ptName;
+                                    
+                                    tr.className = 'locked-officer';
+                                    tr.innerHTML = `
+                                        <td>${ptName}</td>
+                                        <td><strong>${rankLabel}</strong></td>
+                                        <td class="p-text">${matchedPreDeploy.name} (${matchedPreDeploy.ps}) - ${matchedPreDeploy.mobile}</td>
+                                        <td><span class="badge bg-success">[🔒 Pre-Deployed]</span></td>
+                                    `;
+                                } else {
+                                    tr.innerHTML = `
+                                        <td>${ptName}</td>
+                                        <td><strong>${rankLabel}</strong></td>
+                                        <td class="p-text fw-bold text-danger">VACANT</td>
+                                        <td><span class="badge bg-secondary">Pending</span></td>
+                                    `;
+                                }
+                                targetTbody.appendChild(tr);
+                            }
+                        };
+
+                        if(dspNum > 0) appendRowItem('DSP', dspNum, 'DSP');
+                        if(ciNum > 0) appendRowItem('CI', ciNum, 'CI');
+                        if(siNum > 0) appendRowItem('SI', siNum, 'SI');
+                        if(hcNum > 0) appendRowItem('ASI/HC', hcNum, 'ASI/HC');
+                        if(pcNum > 0) appendRowItem('PC', pcNum, 'PC');
+                        if(hgNum > 0) appendRowItem('HG', hgNum, 'HG');
+                    }
+                }
+            });
+
+            // Calculate precise rationing ratio
+            let totalAvailableForce = 0;
+            for (let r in staffPool) {
+                totalAvailableForce += staffPool[r].length;
+            }
+
+            rationingRatio = totalAvailableForce / totalRequiredForce;
+            if (rationingRatio > 1.0) rationingRatio = 1.0;
+
+            document.getElementById('lastUpdateTime').innerText = "Roster Active - Updated just now";
+            updateLiveCounters();
+        }
+
+        // Match Pre-deployed Officer based on direct duty or duty map
+        function findPreDeployedOfficer(sectorName, rankKey) {
+            let pool = getPoolForRank(rankKey);
+            let normalizedSec = normalizeStr(sectorName);
+            
+            return pool.find(member => {
+                if (member.used || !member.duty) return false;
+                
+                // Check direct match
+                if (normalizeStr(member.duty) === normalizedSec) return true;
+                
+                // Check mapped values
+                let mappedSector = dutyToSectorMap[member.duty];
+                if (mappedSector && normalizeStr(mappedSector) === normalizedSec) return true;
+                
+                return false;
+            });
+        }
+
+        // Algorithmic Match Finder
+        function findAlgorithmicStaff(rankKey, pointName, currentSectorName, partnerPS = null) {
+            let pool = getPoolForRank(rankKey);
+            
+            // Filters out already used staff & pre-deployed
+            let available = pool.filter(p => !p.used && !p.duty);
+            if (available.length === 0) return null;
+
+            let ptUpper = pointName.toUpperCase();
+            let ageRuleChecked = document.getElementById('ageRule').checked;
+            let wpcRuleChecked = document.getElementById('wpcRule').checked;
+            
+            // Age Exclusion Check
+            let isLongStandingPoint = ptUpper.includes('ROUTE') || ptUpper.includes('PATROL') || ptUpper.includes('CHECKPOST') || ptUpper.includes('STANDING') || ptUpper.includes('ROAD') || ptUpper.includes('TRAFFIC');
+            if (ageRuleChecked && isLongStandingPoint) {
+                available = available.filter(p => p.age <= 55);
+            }
+
+            // Same PS Pairing filter
+            if (partnerPS) {
+                let paired = available.filter(p => p.ps === partnerPS);
+                if (paired.length > 0) {
+                    available = paired; // Prioritize same station staff
+                }
+            }
+
+            // WPC Rule Restrictions
+            let isVIPPoint = ptUpper.includes('VIP') || ptUpper.includes('SHAMIANA') || ptUpper.includes('STAGE') || ptUpper.includes('ENCLOSURE') || ptUpper.includes('GUEST') || ptUpper.includes('HELIPAD');
+            if (wpcRuleChecked) {
+                if (isVIPPoint) {
+                    let female = available.filter(p => p.gender === 'Female');
+                    if (female.length > 0) return female[0]; // Prioritize WPC for VIP
+                } else {
+                    let male = available.filter(p => p.gender === 'Male');
+                    if (male.length > 0) {
+                        available = male; // Reserve WPC for VIP if possible
+                    }
+                }
+            }
+
+            return available[0] || null;
+        }
+
+        // Fill Sector Data
+        function fillSector(secId) {
+            let tbody = document.getElementById(`tbody-sec-${secId}`);
+            if(!tbody) return;
+
+            let targetRows = Array.from(tbody.querySelectorAll('tr.vacant-slot'));
+            let totalSlots = targetRows.length;
+            let allowedSlots = Math.ceil(totalSlots * rationingRatio);
+
+            // Keeps track of the last assigned PS at this specific point for Same PS pairing
+            let pointPSTracker = {};
+
+            targetRows.forEach((row) => {
+                if(allowedSlots <= 0) {
+                    row.querySelector('.p-text').innerText = "VACANT (Rationed due to Shortage)";
+                    return;
+                }
+                
+                let rKey = row.getAttribute('data-rank');
+                let pointName = row.getAttribute('data-point');
+                let sectorLabel = row.getAttribute('data-sector-label');
+
+                // Check Same PS pairing candidate
+                let partnerPS = pointPSTracker[pointName] || null;
+
+                let match = findAlgorithmicStaff(rKey, pointName, sectorLabel, partnerPS);
+
+                if (match) {
+                    allowedSlots--;
+                    match.used = true;
+                    match.sectorAssigned = sectorLabel;
+                    match.pointAssigned = pointName;
+
+                    // Keep track of the Police Station assigned to this point to try to pair
+                    if (document.getElementById('psPairingRule').checked && !partnerPS) {
+                        pointPSTracker[pointName] = match.ps;
+                    }
+
+                    row.className = "auto-filled-officer";
+                    row.innerHTML = `
+                        <td>${pointName}</td>
+                        <td><strong>${row.cells[1].innerText}</strong></td>
+                        <td class="p-text">${match.name} (${match.ps}) - ${match.mobile} <span class="badge bg-secondary small">${match.age} yrs</span></td>
+                        <td><button class="btn btn-outline-danger btn-sm py-0" onclick="revokeSingle(this, '${rKey}', '${match.name}')">Revoke</button></td>
+                    `;
+                }
+            });
+
+            updateLiveCounters();
+        }
+
+        // Revoke Sector Data
+        function revokeSector(secId) {
+            let tbody = document.getElementById(`tbody-sec-${secId}`);
+            if(!tbody) return;
+
+            let sectorLabel = "";
+            let autoFilledRows = tbody.querySelectorAll('tr.auto-filled-officer');
+            autoFilledRows.forEach(row => {
+                sectorLabel = row.getAttribute('data-sector-label');
+                let rank = row.getAttribute('data-rank');
+                let pt = row.getAttribute('data-point');
+                
+                // Release the assigned officer from pool
+                let pool = getPoolForRank(rank);
+                let matched = pool.find(m => m.used && m.sectorAssigned === sectorLabel && m.pointAssigned === pt);
+                if (matched) {
+                    matched.used = false;
+                    matched.sectorAssigned = null;
+                    matched.pointAssigned = null;
+                }
+
+                // Reset Row back to Vacant
+                row.className = "vacant-slot";
+                row.innerHTML = `
+                    <td>${pt}</td>
+                    <td><strong>${row.cells[1].innerText}</strong></td>
+                    <td class="p-text fw-bold text-danger">VACANT</td>
+                    <td><span class="badge bg-secondary">Pending</span></td>
+                `;
+            });
+
+            updateLiveCounters();
+        }
+
+        // Revoke Single Assignment
+        function revokeSingle(btn, rKey, officerName) {
+            let tr = btn.closest('tr');
+            let sectorLabel = tr.getAttribute('data-sector-label');
+            let pt = tr.getAttribute('data-point');
+
+            // Find officer and release
+            let pool = getPoolForRank(rKey);
+            let officer = pool.find(m => m.name === officerName && m.used && m.sectorAssigned === sectorLabel && m.pointAssigned === pt);
+            if (officer) {
+                officer.used = false;
+                officer.sectorAssigned = null;
+                officer.pointAssigned = null;
+            }
+
+            // Reset back to Vacant
+            tr.className = "vacant-slot";
+            tr.innerHTML = `
+                <td>${pt}</td>
+                <td><strong>${tr.cells[1].innerText}</strong></td>
+                <td class="p-text fw-bold text-danger">VACANT (Revoked by Admin)</td>
+                <td><span class="badge bg-secondary">Admin Revoked</span></td>
+            `;
+
+            updateLiveCounters();
+        }
+
+        // Live Pools Count Updater
+        function updateLiveCounters() {
+            let required = { 'DSP': 0, 'CI': 0, 'SI': 0, 'ASI/HC': 0, 'HC': 0, 'PC': 0, 'WPC': 0, 'HG': 0 };
+            
+            let allRows = document.querySelectorAll('#workspaceContainer tr[data-rank]');
+            allRows.forEach(row => {
+                let r = row.getAttribute('data-rank');
+                if (required[r] !== undefined) required[r]++;
+            });
+
+            let totalReq = Object.values(required).reduce((a, b) => a + b, 0);
+
+            // Pool Counters
+            let totalAvailable = 0;
+            let availableUnused = {};
+            
+            for(let r in staffPool) {
+                totalAvailable += staffPool[r].length;
+                availableUnused[r] = {
+                    avail: staffPool[r].filter(p => !p.used).length,
+                    total: staffPool[r].length
+                };
+            }
+
+            // Standardize output ratio calculation
+            if (totalReq === 0) totalReq = 1;
+            rationingRatio = totalAvailable / totalReq;
+            if (rationingRatio > 1.0) rationingRatio = 1.0;
+            let ratioPct = Math.round(rationingRatio * 100);
+
+            document.getElementById('txtReq').innerText = totalReq;
+            document.getElementById('txtAvail').innerText = totalAvailable;
+            document.getElementById('txtRatio').innerText = ratioPct + "%";
+
+            let alertDiv = document.getElementById('rationingAlert');
+            alertDiv.classList.remove('d-none');
+            if (rationingRatio < 1.0) {
+                alertDiv.className = "alert alert-warning mt-3 mb-0 py-2 text-dark fw-bold";
+                alertDiv.innerHTML = `⚠️ <strong>Rationing Strategy Active (${ratioPct}%):</strong> Understrength staffing limits active. Allocation will fill ${ratioPct}% of points to distribute coverage evenly.`;
+            } else {
+                alertDiv.className = "alert alert-success mt-3 mb-0 py-2 text-dark fw-bold";
+                alertDiv.innerHTML = `✅ <strong>100% Allocation Coverage:</strong> Staff numbers match requirements. Deployment fully active.`;
+            }
+
+            // Update Counter Badges
+            document.getElementById('pool-DSP').innerText = `${availableUnused['DSP'].avail} / ${availableUnused['DSP'].total}`;
+            document.getElementById('pool-CI').innerText = `${availableUnused['CI'].avail} / ${availableUnused['CI'].total}`;
+            document.getElementById('pool-SI').innerText = `${availableUnused['SI'].avail} / ${availableUnused['SI'].total}`;
+            document.getElementById('pool-HC').innerText = `${availableUnused['HC'].avail} / ${availableUnused['HC'].total}`;
+            document.getElementById('pool-ASI').innerText = `${availableUnused['ASI/HC'].avail} / ${availableUnused['ASI/HC'].total}`;
+            document.getElementById('pool-PC').innerText = `${availableUnused['PC'].avail} / ${availableUnused['PC'].total}`;
+            document.getElementById('pool-WPC').innerText = `${availableUnused['WPC'].avail} / ${availableUnused['WPC'].total}`;
+            document.getElementById('pool-HG').innerText = `${availableUnused['HG'].avail} / ${availableUnused['HG'].total}`;
+        }
+
+        // Top Up Logic
+        function executeTopUp() {
+            let f = document.getElementById('additionalFile').files[0];
+            if(!f) { 
+                alert("Please select an additional force nominal roll CSV file."); 
+                return; 
+            }
+
+            let topUpReader = new FileReader();
+            topUpReader.onload = function(e) {
+                let lines = parseLineToTokens(e.target.result);
+                let topUpCount = 0;
+
+                let headers = lines[0] ? lines[0].map(h => h.toUpperCase().trim()) : [];
+                let nRank = headers.findIndex(h => h.includes('RANK'));
+                let nName = headers.findIndex(h => h.includes('NAME'));
+                let nPS = headers.findIndex(h => h.includes('STATION') || h.includes('PS'));
+                let nMob = headers.findIndex(h => h.includes('MOBILE') || h.includes('PHONE'));
+                let nAge = headers.findIndex(h => h.includes('AGE'));
+                let nGender = headers.findIndex(h => h.includes('GENDER'));
+
+                if (nRank === -1) nRank = 1;
+                if (nName === -1) nName = 3;
+                if (nPS === -1) nPS = 4;
+                if (nMob === -1) nMob = 5;
+                if (nAge === -1) nAge = 7;
+                if (nGender === -1) nGender = 8;
+
+                lines.forEach((parts, idx) => {
+                    if (idx === 0 || parts.length < 3) return;
+
+                    let rankToken = parts[nRank] ? parts[nRank].toUpperCase().trim() : '';
+                    let name = parts[nName] ? parts[nName].trim() : '';
+                    let ps = parts[nPS] ? parts[nPS].trim() : '';
+                    let mob = parts[nMob] ? parts[nMob].trim() : '';
+                    let ageVal = parts[nAge] ? parseInt(parts[nAge]) : null;
+                    let genderVal = parts[nGender] ? parts[nGender].trim().toUpperCase() : '';
+
+                    if (!name || name.toUpperCase().includes('NAME')) return;
+
+                    if (!ageVal || isNaN(ageVal)) {
+                        ageVal = Math.floor(Math.random() * (58 - 23 + 1)) + 23;
+                    }
+
+                    let isFemale = genderVal.includes('F') || genderVal.includes('W') || rankToken.includes('WPC') || name.toUpperCase().includes('WPC');
+                    let gender = isFemale ? 'Female' : 'Male';
+
+                    let member = { 
+                        name: name, 
+                        ps: ps, 
+                        mobile: mob || "Available in Roll", 
+                        duty: null,
+                        age: ageVal,
+                        gender: gender,
+                        used: false,
+                        sectorAssigned: null,
+                        pointAssigned: null,
+                        rank: rankToken
+                    };
+
+                    if (rankToken.includes('DSP')) staffPool['DSP'].push(member);
+                    else if (rankToken.includes('CI') || rankToken.includes('INSPECTOR')) staffPool['CI'].push(member);
+                    else if (rankToken.includes('SI')) staffPool['SI'].push(member);
+                    else if (rankToken.includes('ASI')) staffPool['ASI/HC'].push(member);
+                    else if (rankToken.includes('HC')) staffPool['HC'].push(member);
+                    else if (rankToken.includes('WPC')) staffPool['WPC'].push(member);
+                    else if (rankToken.includes('PC')) staffPool['PC'].push(member);
+                    else if (rankToken.includes('HG')) staffPool['HG'].push(member);
+                    else staffPool['PC'].push(member);
+
+                    topUpCount++;
+                });
+
+                // Recalculate global rationing ratio with the added pool
+                let totalReq = parseInt(document.getElementById('txtReq').innerText) || 1;
+                let totalAvail = 0;
+                for (let r in staffPool) totalAvail += staffPool[r].length;
+
+                rationingRatio = totalAvail / totalReq;
+                if (rationingRatio > 1.0) rationingRatio = 1.0;
+
+                // Fill remaining Vacant slots across all sectors
+                let vacantRows = document.querySelectorAll('#workspaceContainer tr.vacant-slot');
+                vacantRows.forEach(row => {
+                    let rKey = row.getAttribute('data-rank');
+                    let pointName = row.getAttribute('data-point');
+                    let sectorLabel = row.getAttribute('data-sector-label');
+
+                    let match = findAlgorithmicStaff(rKey, pointName, sectorLabel);
+                    if (match) {
+                        match.used = true;
+                        match.sectorAssigned = sectorLabel;
+                        match.pointAssigned = pointName;
+
+                        row.className = "auto-filled-officer";
+                        row.innerHTML = `
+                            <td>${pointName}</td>
+                            <td><strong>${row.cells[1].innerText}</strong></td>
+                            <td class="p-text">${match.name} (${match.ps}) - ${match.mobile} <span class="badge bg-secondary small">${match.age} yrs</span></td>
+                            <td><button class="btn btn-outline-danger btn-sm py-0" onclick="revokeSingle(this, '${rKey}', '${match.name}')">Revoke</button></td>
+                        `;
+                    }
+                });
+
+                updateLiveCounters();
+                alert(`Top-up successful! Added ${topUpCount} new staff. Vacancies filled where possible.`);
+            };
+            topUpReader.readAsText(f);
+        }
+
+        // SMS / WhatsApp Dispatch logs simulation
+        let simulatedSMSLogs = [];
+        
+        function sendBulkNotifications() {
+            simulatedSMSLogs = [];
+            let allFilledRows = document.querySelectorAll('#workspaceContainer tr.auto-filled-officer, #workspaceContainer tr.locked-officer');
+            
+            if (allFilledRows.length === 0) {
+                alert("No officers are currently deployed. Please process files and fill sectors first.");
+                return;
+            }
+
+            allFilledRows.forEach(row => {
+                let sector = row.getAttribute('data-sector-label');
+                let point = row.getAttribute('data-point');
+                let rank = row.cells[1].innerText;
+                let detailsText = row.querySelector('.p-text').innerText;
+                
+                // Parse Name & Mobile from details text: "Name (PS) - Mobile [age]"
+                let name = detailsText.split('(')[0].trim();
+                let remaining = detailsText.split(')')[1] || '';
+                let mobile = remaining.split('-')[1] ? remaining.split('-')[1].split(' ')[1] || 'Available in Roll' : 'Available in Roll';
+                mobile = mobile.replace(/[^0-9]/g, '');
+
+                if (!mobile || mobile.length < 5) mobile = "9949830873"; // fallback placeholder
+
+                let msg = `CDAC GOVT GATEWAY SMS: Dear ${name} (${rank}), you are deployed at ${point} (${sector}) for VVIP Bandobast Duty. Please report to your sector charge immediately.`;
+                
+                simulatedSMSLogs.push({
+                    name: name + ` (${rank})`,
+                    mobile: mobile,
+                    message: msg,
+                    status: 'DELIVERED'
+                });
+            });
+
+            // Fill log table
+            let tbody = document.getElementById('smsLogTableBody');
+            tbody.innerHTML = '';
+            simulatedSMSLogs.forEach(log => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${log.name}</strong></td>
+                    <td><code>${log.mobile}</code></td>
+                    <td><small>${log.message}</small></td>
+                    <td><span class="badge bg-success">Delivered</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            let myModal = new bootstrap.Modal(document.getElementById('smsModal'));
+            myModal.show();
+        }
+
+        function filterSMSLogs() {
+            let filter = document.getElementById('smsSearchInput').value.toUpperCase();
+            let rows = document.querySelectorAll('#smsLogTableBody tr');
+            rows.forEach(row => {
+                let text = row.innerText.toUpperCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        }
+
+        // Export Report as CSV
+        function downloadDeploymentCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Sector,Point Name,Required Rank,Assigned Personnel,Status\n";
+            let rows = document.querySelectorAll('#workspaceContainer tr[data-rank]');
+            
+            if (rows.length === 0) {
+                alert("Nothing to export. Load files first.");
+                return;
+            }
+
+            rows.forEach(row => {
+                let sector = row.getAttribute('data-sector-label').replace(/,/g, ' ');
+                let point = row.getAttribute('data-point').replace(/,/g, ' ');
+                let rank = row.cells[1].innerText;
+                let details = row.querySelector('.p-text').innerText.replace(/,/g, ' ');
+                let status = row.querySelector('.badge') ? row.querySelector('.badge').innerText : "Auto-Filled";
+                
+                csvContent += `"${sector}","${point}","${rank}","${details}","${status}"\n`;
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "vvip_bandobast_deployment_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
